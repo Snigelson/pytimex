@@ -20,7 +20,7 @@ program. Much easier than getting it from the CRT!
 * Split up DATA1 packets if too long
 * Test everything more extensively (most tests have been comparing to
   data from the original Timex software)
-* Redo the protocol dogumentation
+* Redo the protocol documentation
 
 
 ## "Timex Notebook Adapter"
@@ -78,6 +78,7 @@ Start package contains 0x00 0x00 0x01 for the original Data Link (70?),
 but for model 150 it contains 0x00 0x00 0x03, and for 150s it contains 
 0x00 0x00 0x04.
 
+```
 zero or more packet type TIME 0x30
 byte 1     - timezone   (the watch has two timezones, 1 or 2)
 byte 2     - hour
@@ -93,15 +94,16 @@ one package type 0x31 for each time zone - TZNAME
 Contains names of timezones, unpacked, timex charset
 byte 1    - Time zone number (1 or 2)
 byte 2-4  - Name of time zone (e.g. 0x0e 0x1c 0x1d for EST)
+```
 
 Checksum seems to be CRC-16/ARC.
 
-For appointment packets, time is indicated in quarters of
-an hour since midnight, if that makes more sense. So for
-instance 08:45 would be 8*4+3=35 quarters.
+For appointment packets, time is indicated in quarters of an hour since 
+midnight, if that makes more sense. So for instance 08:45 would be 
+8*4+3=35 quarters.
 
-For the 150 models, the protocol seems slightly different. For instance,
-there is a 0x32 package for sending time, combining the 0x30 and 0x31 packets.
-Also, the 0x70 packet sent after inaudible alarms is omitted. There might
-be more differences I've yet to uncover. Also proocol for apps and
-sounds are yet to be documented.
+For the 150 models, the protocol seems slightly different. For instance, 
+there is a 0x32 package for sending time, combining the 0x30 and 0x31 
+packets. Also, the 0x70 packet sent after inaudible alarms is omitted. 
+There might be more differences I've yet to uncover. Also proocol for 
+apps and sounds are yet to be documented.
