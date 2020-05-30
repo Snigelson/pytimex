@@ -86,31 +86,24 @@ class TimexAlarm:
 		self.day = day
 		self.label = label
 		self.audible = audible
-		self.seq=0
 
-	def __bytes__(self):
-		# TODO: Adapt for 150 series
-		data = [self.seq] # TODO: Should be alarm sequence ID! (1-5)
-		data += [self.hour, self.minute, self.month, self.day]
+	def __str__(self):
+		audible_str = "audible" if self.audible else "inaudible"
 
-		label = self.label
-		if len(label)<8: # Min 8 chars, pad with space
-			label +=" "*(8-len(label))
-		label = label[:8] # Max 8 chars
-		data += str2timex(label)
+		if self.day==0 and self.month==0:
+			return "Alarm at {:02d}:{:02d}, label \"{}\", {}".format(
+				self.hour, self.minute, self.label, audible_str)
 
-		if self.audible:
-			data += [1]
-		else:
-			data += [0]
+		if self.day==0:
+			return "Alarm at {:02d}:{:02d} every day in {}, label \"{}\", {}".format(
+				self.hour, self.minute, monthNamesAbbr[self.month], self.label, audible_str)
 
-		pkgdata = makepkg([0x50]+data)
+		if self.month==0:
+			return "Alarm at {:02d}:{:02d} on the {}, label \"{}\", {}".format(
+				self.hour, self.minute, self.day, self.label, audible_str)
 
-		if not self.audible:
-			data = [0, 0x61+self.seq, 0]
-			pkgdata += makepkg([0x70]+data)
-
-		return bytes(pkgdata)
+		return "Alarm at {:02d}:{:02d} on the {} of {}, label \"{}\", {}".format(
+			self.hour, self.minute, self.day, monthNamesAbbr[self.month], self.label, audible_str)
 
 class TimexData:
 	def __init__(self):
