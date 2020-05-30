@@ -71,6 +71,13 @@ reads a data length (2 bytes, big endian), allocates a buffer and reads
 that many bytes, and then transfers them. Sync bytes must be sent by the 
 PC, and timing is done entirely on the Arduino.
 
+Hardware wise, you need an Arduino with ATmega328 (168 would probably 
+work too) with 16 MHz clock. Should work with Uno, Nano, Duemilanove and 
+others. Connect an IR LED to pin 12 with a suitable resistor in series 
+and you're golden. Experiment with distance and LED frequency to get it 
+just right. Some LEDs are very focused and offers only a narrow beam, so 
+if you have the option, try to find one with a wide beam.
+
 
 ## Additions/corrections to the github document
 
