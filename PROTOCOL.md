@@ -34,9 +34,9 @@ approximately 488 µs. So this sort of makes sense.
 
 Data transfer using CRT is done at 640x480@60Hz. At this resolution and 
 frequency, the horizontal refresh frequency is 31.46875 kHz, so one line 
-is drawn approximately every 31.78 µs. using the above timings, we can 
-quantify the above measurement and conclude that one bit is one line and 
-a bit is sent every 15 lines. The watch seems to be a bit flexible on
+is drawn approximately every 31.78 µs. Using these timings, we can 
+quantify the above measurements and conclude that one bit is one line and 
+a bit is sent every 15 lines. The watch seems to be a bit flexible on 
 this though.
 
 Data bytes are separated by approximately 2 ms, and packets are separated 
