@@ -73,10 +73,23 @@ class TimexAnniversary:
 		return bytes(data)
 
 class TimexTimezone:
-	def __init__(self, offset, format, name):
+	def __init__(self, offset=0, format=24, name=""):
 		self.offset = offset
-		self.format = format
+		self._format = format
 		self.name = name
+
+	@property
+	def format(self):
+		return self._format
+
+	@format.setter
+	def format(self, f):
+		if not f in [12,24]:
+			raise Exception("Time format must be 12 or 24 hours")
+		self.format = f
+
+	def __str__(self):
+		return "Time zone with offset UTC{:+} named \"{}\", {} hour format".format(offset, name, format)
 
 class TimexAlarm:
 	def __init__(self, hour=0, minute=0, month=0, day=0, label="", audible=True):
