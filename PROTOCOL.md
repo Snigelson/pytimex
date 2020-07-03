@@ -182,6 +182,8 @@ Example: 0x02 0x0e 0x1c 0x1d - timezone 2 named EST
 
 Alarm packet for model 150 and 150s. To be documented.
 
+Combination of time packet and time zone name packet. Also includes
+information on date format, I believe.
 
 ### 0x60 - START2
 
