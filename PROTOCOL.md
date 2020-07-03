@@ -85,7 +85,8 @@ Third byte:
 - High 6 bits contain last character
 - Low 2 bits contain high bits of third character
 
-Unused bits are set to ones.
+Strings are terminated by a character with all ones (0x3F). If there are 
+any 0 bytes in the end, these are removed.
 
 If the above explanation, maybe some pseudo code can clear it up:
 
@@ -219,15 +220,17 @@ get 0x14 instead. Requires some investigating.
 Byte 15 indicates how long before appointments, in 5 minute intervals, 
 the alarm will sound.
 
-Check if the following DATA1 packets contain data start indexes etc too, 
-or if their payloads are just concatenated.
+It seems the maximum length of DATA1 packets sent by original software is 
+32 (0x20) bytes. Payloads of packets 2 and forward are just concatenated 
+to the first, i.e. no header is added.
 
 The following data in the payload are records of the following
 format:
 
 These 4 record types are found in DATA1 packets:
 
-Appointment record
+
+#### Appointment record
 
 | Byte   | Description                        |
 | ------ | ---------------------------------- |
@@ -240,23 +243,40 @@ Appointment record
 Time is encoded in 15 minute intervals since midnight, such that 08:45 is 
 8*4+3=35.
 
-Todo record
+
+#### Todo record
 
 | Byte   | Description                        |
 | ------ | ---------------------------------- |
 | 1      | Record length                      |
-| 2      | Priority                           |
+| 2      | Priority (0 or 1-5)                |
 | 3->len | Packed string                      |
 
-Phone number record
+
+#### Phone number record
 
 | Byte   | Description                        |
 | ------ | ---------------------------------- |
 | 1      | Record length                      |
 | 2-6    | Phone number (BCD, 2 digits per byte, little endian) |
-| 7->len | Packed string                      |
+| 7      | Type                               |
+| 8->len | Packed string                      |
 
-Anniversary record
+Unused digits in phone numbers are set to F (i.e. 4 ones)
+
+Type is a byte from the table below. I have not yet tested other values.
+
+| Type   | Description            |
+| ------ | ---------------------- |
+| 0xAF   | Cellular               |
+| 0xBF   | Fax                    |
+| 0xCF   | Home                   |
+| 0xDF   | Pager                  |
+| 0xEF   | Work                   |
+| 0xFF   | None (No letter shown) |
+
+
+#### Anniversary record
 
 | Byte   | Description                        |
 | ------ | ---------------------------------- |
