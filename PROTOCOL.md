@@ -216,8 +216,8 @@ the first data is always located at index 0x0e.
 The unknown byte was documented as 0x60, but I seem to
 get 0x14 instead. Requires some investigating.
 
-Byte 15 indicates how long before the specified time the alarm will sound 
-(I believe).
+Byte 15 indicates how long before appointments, in 5 minute intervals, 
+the alarm will sound.
 
 Check if the following DATA1 packets contain data start indexes etc too, 
 or if their payloads are just concatenated.
