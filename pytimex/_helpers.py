@@ -1,6 +1,9 @@
+# Currently only implemented for model 70.
+
 from crccheck.crc import CrcArc
 
 # Create character conversion table (to be verified)
+# Called at first call of str2timex
 """
 char set for labels is:   (6 bits per char)
 0-9 : digits
@@ -11,12 +14,13 @@ divide =
 bell (image, not sound)
 ?
 """
+
 char_conv = None
 def make_char_conv():
 	global char_conv
 
-	# All lowercase characters. Using uppercase D for divide symbol and B for bell symbol
-	dst = "0123456789abcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./;\\D=B?"
+	# All lowercase characters. Using colon (:) for divide symbol and at (@) for bell symbol
+	dst = "0123456789abcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./;\\:=@?"
 	src = range(len(dst))
 	char_conv = {k:v for k,v in zip(dst,src)}
 
@@ -50,7 +54,7 @@ def pack4to3(indata):
 
 	return outdata
 
-# Takes a list of bytes, returns list of bytes in package with length and checksum
+# Takes a list of bytes, encapsulates and returns final data packet
 def makepkg(values):
 	packet = []
 
@@ -76,7 +80,7 @@ def pkgstr(pkg):
 
 ### Packet makers
 
-# Make start package. Currently only implemented for model 70.
+# Make start package.
 def makeSTART1():
 	return makepkg([0x20, 0x00, 0x00, 0x01])
 
@@ -138,7 +142,8 @@ def makeDATA1(appts, todos, phones, anniversaries):
 
 	return makepkg([0x61]+data)
 
-# Currently only implemented for model 70.
+# Pass an ID 1 or 2, a datetime object containing current time in this
+# timezone and 12 or 24 for time format
 def makeTZ(tzno, tztime, format):
 	data = [tzno,
 		tztime.hour, tztime.minute,
@@ -163,7 +168,6 @@ def makeTZNAME(tzno, tzname):
 	return makepkg([0x31]+data)
 
 # Takes an alarm number and a sequence ID (1-5)
-# Currently only implemented for model 70.
 def makeALARM(alarm, seq):
 	data = [seq]
 	data += [alarm.hour, alarm.minute, alarm.month, alarm.day]
