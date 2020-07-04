@@ -179,12 +179,10 @@ Insert spaces on unused characters.
 Example: 0x02 0x0e 0x1c 0x1d - timezone 2 named EST
 
 
-### 0x32 - ALARM2
-
-Alarm packet for model 150 and 150s. To be documented.
+### 0x32 - TIMETZ
 
 Combination of time packet and time zone name packet. Also includes
-information on date format, I believe.
+information on date format, I believe. For models 150 and 150s.
 
 ### 0x60 - START2
 
@@ -328,6 +326,11 @@ Didn't know what to call this. Sent after silent alarms
 | 1    | Always 0                           |
 | 2    | ID of preceding alarm + 0x61       |
 | 3    | Always 0                           |
+
+
+### 0x?? - ALARM2
+
+Alarm packet for model 150 and 150s. To be documented.
 
 
 ### 0x21 - END2
