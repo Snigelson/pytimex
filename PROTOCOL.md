@@ -258,22 +258,26 @@ Time is encoded in 15 minute intervals since midnight, such that 08:45 is
 | Byte   | Description                        |
 | ------ | ---------------------------------- |
 | 1      | Record length                      |
-| 2-6    | Phone number (BCD, 2 digits per byte, little endian) |
-| 7      | Type                               |
+| 2-7    | Phone number (BCD, 2 digits per byte, little endian) |
 | 8->len | Packed string                      |
 
-Unused digits in phone numbers are set to F (i.e. 4 ones)
+Unused digits in phone numbers are set to 0xF.
 
-Type is a byte from the table below. I have not yet tested other values.
+In the original software, you can set a "type" of number. This can only 
+be done for numbers 11 digits or shorter, and the last digit is replaced 
+by a character from the table below.
 
-| Type   | Description            |
-| ------ | ---------------------- |
-| 0xAF   | Cellular               |
-| 0xBF   | Fax                    |
-| 0xCF   | Home                   |
-| 0xDF   | Pager                  |
-| 0xEF   | Work                   |
-| 0xFF   | None (No letter shown) |
+| Type | Description            |
+| ---- | ---------------------- |
+| 0xA  | Cellular (C)           |
+| 0xB  | Fax (F)                |
+| 0xC  | Home (H)               |
+| 0xD  | Pager (P)              |
+| 0xE  | Work (W)               |
+| 0xF  | None (No letter shown) |
+
+Test this: You could probably use these values at any digit. If so, you 
+could spell out simple words using 1 as I and 0 as O for vowels.
 
 
 #### Anniversary record
