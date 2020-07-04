@@ -57,18 +57,19 @@ verified if the exact number is important.
 
 ## Strings
 
-Strings are encoded in a special charset, which I call the Timex charset.
+Strings are encoded in a special charset, which is referencet to as 
+timexscii, timex charset or similar.
 
-From the old protocol documentation:
+The character set is:
+```
+0123456789
+abcdefghijklmnopqrstuvwxyz
+ !"#$%&'()*+,-./:\[divide]=[bell symbol]?
+[Underscore][underscored check mark][left arrow][right arrow][big square][small square]
+```
 
-```char set for labels is:   (6 bits per char)
-0-9 : digits
-10-36: letters
-37-63: symbols:
-space !"#$%&'()*+,-./;\
-divide =
-bell (image, not sound)
-?```
+The small square can be used only on unpacked strings, since on packed 
+strings it is interpreted as a string terminator.
 
 Since only 6 bits are used per character, the 24 bits of 4 characters can 
 be packed into 3 bytes.
@@ -216,11 +217,12 @@ The unknown byte was documented as 0x60, but I seem to get 0x14 when
 sending appointments and 0x00 otherwise. Requires some investigating.
 
 Byte 15 indicates how long before appointments, in 5 minute intervals, 
-the alarm will sound.
+the alarm will sound. Set to 0xFF for no alarm
 
 It seems the maximum length of DATA1 packets sent by original software is 
 32 (0x20) bytes. Payloads of packets 2 and forward are just concatenated 
-to the first, i.e. no header is added.
+to the first, i.e. no header is added. Header and checksum are not counted
+against start indices.
 
 The following data in the payload are records of the following
 format:
@@ -241,6 +243,10 @@ These 4 record types are found in DATA1 packets:
 Time is encoded in 15 minute intervals since midnight, such that 08:45 is 
 8*4+3=35.
 
+Model 70: If a value of 90 or higher is used, time will not wrap. 90 will 
+show as 24:00, 91 as 24:15, and 255 as 63:45. This will probably not work 
+with alarms. Month and day is not boundary checked either.
+
 
 #### Todo record
 
@@ -249,6 +255,11 @@ Time is encoded in 15 minute intervals since midnight, such that 08:45 is
 | 1      | Record length                      |
 | 2      | Priority (0 or 1-5)                |
 | 3->len | Packed string                      |
+
+Original software only sends priority 0 to 5. The number actually 
+represents a timexscii character, so any priority up to 63 can be used. 
+For 0, no priority is shown on the watch. If you want to show "PRI - 0" 
+on the watch, you can set the priority to 64.
 
 
 #### Phone number record
@@ -274,8 +285,8 @@ by a character from the table below.
 | 0xE  | Work (W)               |
 | 0xF  | None (No letter shown) |
 
-Test this: You could probably use these values at any digit. If so, you 
-could spell out simple words using 1 as I and 0 as O for vowels.
+It seems possible to use these character at any position in the phone
+number, if you want.
 
 If phone number is 10 digits or shorter, the last two digits are unused. 
 This is done to reserve space for the type, and a space between number 
