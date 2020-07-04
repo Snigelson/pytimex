@@ -36,10 +36,15 @@ def str2timex(string):
 	return out
 
 # Pack 4 bytes in 3, used for strings
+# * Set last char to 0b111111 (all 6 bits 1)
+# * Discard any unused bytes (i.e. all zeros) at the end
 def pack4to3(indata):
+	# Add terminating byte
+	indata.append(0x3f)
+
+	# Add padding
 	while len(indata)%4:
-		# Add padding
-		indata.append(0xff)
+		indata.append(0x00)
 
 	outdata = []
 	while len(indata)>0:
@@ -51,6 +56,11 @@ def pack4to3(indata):
 		outdata.append( ((ch2&0x03)<<6) | (ch1&0x3F) )
 		outdata.append( ((ch3&0x0F)<<4) | ((ch2>>2)&0x0F) )
 		outdata.append( ((ch4&0x3F)<<2) | ((ch3&0x30)>>4) )
+
+	# Remove zero bytes at end
+	while outdata[-1] == 0x00:
+		print("Removing one zero")
+		outdata = outdata[:-1]
 
 	return outdata
 
