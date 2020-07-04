@@ -101,53 +101,67 @@ def makeEND1():
 def makeEND2():
 	return makepkg([0x21])
 
+def makeDATA1payload(appts, todos, phones, anniversaries, appt_alarm=0xFF):
+	payload  = [0,0] # Start index for appointments, to be filled later
+	payload += [0,0] # Start index for todos, to be filled later
+	payload += [0,0] # Start index for phone numbers, to be filled later
+	payload += [0,0] # Start index for anniversaries, to be filled later
+	payload += [len(appts)]
+	payload += [len(todos)]
+	payload += [len(phones)]
+	payload += [len(anniversaries)]
+	payload += [0x14] if len(anniversaries) else [0] # The old docs had 0x60 here, with a question mark
+	payload += [appt_alarm] # Time, in five minute intervals, to alarm before appointments (0xFF for none)
+
+	# Add appointments
+	index = len(payload)
+	payload[0] = (index&0xFF00) >> 8
+	payload[1] = (index&0x00FF)
+	for a in appts:
+		payload += list(bytes(a))
+
+	# Add todos
+	index = len(payload)
+	payload[2] = (index&0xFF00) >> 8
+	payload[3] = (index&0x00FF)
+	for a in todos:
+		payload += list(bytes(a))
+
+	# Add phone numbers
+	index = len(payload)
+	payload[4] = (index&0xFF00) >> 8
+	payload[5] = (index&0x00FF)
+	for a in phones:
+		payload += list(bytes(a))
+
+	# Add anniversaries
+	index = len(payload)
+	payload[6] = (index&0xFF00) >> 8
+	payload[7] = (index&0x00FF)
+	for a in anniversaries:
+		payload += list(bytes(a))
+
+	return payload
+
 # Takes lists of TimexAppointment, TimexTodo, TimexPhoneNumber
 # and TimexAnniversary objects
 def makeDATA1(appts, todos, phones, anniversaries):
-	# TODO: For now, this assumes everything fits in one packet.
-	#       If there is a lot of data, this may be split up over
-	#       more than one packet.
-	data = [1] # Sequence ID
-	data += [0,0] # Start index for appointments, to be filled later
-	data += [0,0] # Start index for todos, to be filled later
-	data += [0,0] # Start index for phone numbers, to be filled later
-	data += [0,0] # Start index for anniversaries, to be filled later
-	data += [len(appts)]
-	data += [len(todos)]
-	data += [len(phones)]
-	data += [len(anniversaries)]
-	data += [0x14] # The github repo had 0x60 here, with a question mark
-	data += [0x03] # Time, in five minute intervals, to alarm before appointments
+	data = makeDATA1payload(appts, todos, phones, anniversaries, appt_alarm=appt_alarm)
 
-	# Add appointments
-	index = len(data)-1
-	data[1] = (index&0xFF00) >> 8
-	data[2] = (index&0x00FF)
-	for a in appts:
-		data += list(bytes(a))
+	return makepkg([0x61, 0x01]+data)
 
-	# Add todos
-	index = len(data)-1
-	data[3] = (index&0xFF00) >> 8
-	data[4] = (index&0x00FF)
-	for a in todos:
-		data += list(bytes(a))
+# Takes lists of TimexAppointment, TimexTodo, TimexPhoneNumber
+# and TimexAnniversary objects
+def makeDATA1completeBreakfast(appts, todos, phones, anniversaries, appt_alarm=0xff):
+	payload = makeDATA1payload(appts, todos, phones, anniversaries, appt_alarm=appt_alarm)
+	data1packets = []
+	index = 0
+	while (payload):
+		index += 1
+		data1packets += makepkg([0x61, index]+payload[:27])
+		payload = payload[27:]
 
-	# Add phone numbers
-	index = len(data)-1
-	data[5] = (index&0xFF00) >> 8
-	data[6] = (index&0x00FF)
-	for a in phones:
-		data += list(bytes(a))
-
-	# Add anniversaries
-	index = len(data)-1
-	data[7] = (index&0xFF00) >> 8
-	data[8] = (index&0x00FF)
-	for a in anniversaries:
-		data += list(bytes(a))
-
-	return makepkg([0x61]+data)
+	return makeSTART2(index) + data1packets + makeEND1()
 
 # Pass an ID 1 or 2, a datetime object containing current time in this
 # timezone and 12 or 24 for time format
