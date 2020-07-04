@@ -25,13 +25,14 @@ class TimexAppointment:
 		return bytes(data)
 
 class TimexTodo:
-	def __init__(self, 	prio=1, label=""):
+	def __init__(self, 	prio=0, label=""):
 		self.prio=prio
 		self.label=label
 
 	def __str__(self):
-		return "Todo with priority {}, label \"{}\"".format(
-			self.prio, self.label)
+		p = "priority {}".format(self.prio) if self.prio else "no priority"
+		return "Todo with {}, label \"{}\"".format(
+			p, self.label)
 
 	def __bytes__(self):
 		data = [self.prio]
@@ -66,7 +67,7 @@ class TimexPhoneNumber:
 
 
 class TimexAnniversary:
-	def __init__(self, 	month=0, day=0, label=""):
+	def __init__(self, 	month=1, day=1, label=""):
 		self.month=month
 		self.day=day
 		self.label=label
@@ -156,8 +157,8 @@ class TimexData:
 	def addAppointment(self, appointment):
 		self.appointments.append(appointment)
 
-	def addNewAppointment(self, month=0, day=0, time=0, label=""):
-		new = TimexAppointment(month, day, time, label)
+	def addNewAppointment(self, *args, **kwargs):
+		new = TimexAppointment(*args, **kwargs)
 		self.addAppointment(new)
 		return new
 
@@ -167,8 +168,8 @@ class TimexData:
 	def addTodo(self, todo):
 		self.todos.append(todo)
 
-	def addNewTodo(self, prio=1, label=""):
-		new = TimexTodo(prio, label)
+	def addNewTodo(self, *args, **kwargs):
+		new = TimexTodo(*args, **kwargs)
 		self.addTodo(new)
 		return new
 
@@ -178,8 +179,8 @@ class TimexData:
 	def addPhoneNumber(self, phonenumber):
 		self.phonenumbers.append(phonenumber)
 
-	def addNewPhoneNumber(self, number=1, label=""):
-		new = TimexPhoneNumber(number, label)
+	def addNewPhoneNumber(self, *args, **kwargs):
+		new = TimexPhoneNumber(*args, **kwargs)
 		self.addPhoneNumber(new)
 		return new
 
@@ -189,8 +190,8 @@ class TimexData:
 	def addAnniversary(self, anniversary):
 		self.anniversaries.append(anniversary)
 
-	def addNewAnniversary(self, month=0, day=0, label=""):
-		new = TimexAnniversary(month, day, label)
+	def addNewAnniversary(self, *args, **kwargs):
+		new = TimexAnniversary(*args, **kwargs)
 		self.addAnniversary(new)
 		return new
 
@@ -200,8 +201,8 @@ class TimexData:
 	def addAlarm(self, alarm):
 		self.alarms.append(alarm)
 
-	def addNewAlarm(self, hour=0, minute=0, month=0, day=0, label="", audible=True):
-		new = TimexAlarm(hour, minute, month, day, label, audible)
+	def addNewAlarm(self, *args, **kwargs):
+		new = TimexAlarm(*args, **kwargs)
 		self.addAlarm(new)
 		return new
 
