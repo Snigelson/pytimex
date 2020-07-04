@@ -40,6 +40,7 @@ class TimexTodo:
 		return bytes(data)
 
 class TimexPhoneNumber:
+	# TODO: Do not store numbers as integers, leading zeros will be removed
 	def __init__(self, 	number=1, label=""):
 		self.number=number
 		self.label=label
@@ -49,12 +50,20 @@ class TimexPhoneNumber:
 			self.number, self.label)
 
 	def __bytes__(self):
-		# Encoded as four bits per digit and LSD first, always 10 digits
-		digits = [ord(x)-ord('0') for x in "{:010d}".format(self.number)[::-1]]
-		data = [d[0]<<4|d[1] for d in zip(digits[0::2], digits[1::2]) ]
+		# TODO: This only works with numbers 10 digits or less, and no type indication
+		# Convert to digits
+		digits = [ord(x)-ord('0') for x in "{:d}".format(self.number)]
+		# Pad with F
+		t = [15]*12 # Make a "template" filled with F
+		t[-2-len(digits):-2] = digits # Replace part of template
+		# Smush it up
+		data = [d[1]<<4|d[0] for d in zip(t[0::2], t[1::2]) ]
+
 		data = data + pack4to3(str2timex(self.label))
 		data = [len(data)+1] + data
+
 		return bytes(data)
+
 
 class TimexAnniversary:
 	def __init__(self, 	month=0, day=0, label=""):

@@ -19,8 +19,12 @@ program. Much easier than getting it from the CRT!
 * Check if all 5 alarms must be sent every time
 * Split up DATA1 packets if too long
 * Test everything more extensively (most tests have been comparing to
-  data from the original Timex software)
-* Redo the protocol documentation
+  data from the original Timex software) - set up unit tests
+* Work on the protocol documentation
+
+More specific work:
+
+* Implement phone number type/letter support
 
 
 ## "Timex Notebook Adapter"
