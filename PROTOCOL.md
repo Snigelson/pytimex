@@ -279,6 +279,17 @@ by a character from the table below.
 Test this: You could probably use these values at any digit. If so, you 
 could spell out simple words using 1 as I and 0 as O for vowels.
 
+If phone number is 10 digits or shorter, the last two digits are unused. 
+This is done to reserve space for the type, and a space between number 
+and type. If the number is 11 digits long, the space between number and 
+type is used. If the number is 12 digits long, the type is not included 
+and that space is used for a number instead.
+
+Another peculiarity is that you can send multiple numbers for the same 
+name by completely omitting the name, not even sendig a string 
+terminator, on successive messages. These packages will always be 7 bytes 
+long.
+
 
 #### Anniversary record
 
