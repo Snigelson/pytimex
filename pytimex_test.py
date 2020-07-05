@@ -40,7 +40,7 @@ print(listhex(data))
 print("")
 
 # Initialize blaster
-b = pytimex.Blaster("/dev/ttyACM0", syncbuflen=16)
+b = pytimex.Blaster("/dev/ttyACM0")
 
 if not b.identify():
 	print("Could not verify adapter :(")
@@ -54,11 +54,6 @@ b.send_sync()
 # Blast data
 for databyte in data:
 	b.blast(databyte)
-
-print("Synchronizing...")
-
-# Flush and wait for all bytes to sync
-b.flush()
 
 print("Done!")
 
