@@ -1,13 +1,14 @@
 /* Implementation of transcoder behaving more closely to the fabled
  * Notebook Adapter. Hopefully, it can be made compatible with the
  * original software.
- */
-
-/* This code is paced by the transmission rate between PC and Blaster
- * being 9600 baud. Inter-package delay can be done on either PC or
- * blaster side. The first case works better with the Python software
- * and the latter with the original software.
- */
+ *
+ * This code should work on any Arduino with ATmega328 at 16 MHz, such
+ * as Duemillanove, Uno, Nano, and others.
+ *
+ * The transmission is paced by the transmission rate between PC and
+ * Blaster being 9600 baud. Inter-package delay can be done on either PC
+ * or blaster side. The first case works better with the Python software
+ * and the latter with the original software. */
 
 /* If this define is enabled, the blasting will be faster. It works fine
  * most of the time, but the slower speed will probably be more reliable.
