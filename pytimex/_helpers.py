@@ -1,6 +1,7 @@
 # Currently only implemented for model 70.
 
 from crccheck.crc import CrcArc
+from math import ceil
 
 # Create character conversion table (to be verified)
 # Called at first call of str2timex
@@ -19,8 +20,10 @@ char_conv = None
 def make_char_conv():
 	global char_conv
 
-	# All lowercase characters. Using colon (:) for divide symbol and at (@) for bell symbol
-	dst = "0123456789abcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./;\\:=@?"
+	# All lowercase characters. Using semicolon (;) for divide symbol and at (@) for bell symbol
+	# Underscore, underscored check mark, left arrow, right arrow, big block, small square/terminator
+	# Small square can be used only on unpacked strings, since on packed strings it is interpreted as a string terminator.
+	dst = "0123456789abcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:\\;=@?ABCDEF"
 	src = range(len(dst))
 	char_conv = {k:v for k,v in zip(dst,src)}
 
@@ -144,11 +147,24 @@ def makeDATA1payload(appts, todos, phones, anniversaries, appt_alarm=0xFF):
 	return payload
 
 # Takes lists of TimexAppointment, TimexTodo, TimexPhoneNumber
-# and TimexAnniversary objects
-def makeDATA1(appts, todos, phones, anniversaries):
+# and TimexAnniversary objects. Makes DATA1 payload and splits
+# it up as required
+def makeDATA1(appts, todos, phones, anniversaries, appt_alarm=0xff):
+	payload = makeDATA1payload(appts, todos, phones, anniversaries, appt_alarm=appt_alarm)
+	data1packets = []
+	index = 0
+	while (payload):
+		index += 1
+		data1packets += makepkg([0x61, index]+payload[:27])
+		payload = payload[27:]
+
+	return data1packets
+
+# Returns number of packets required for DATA1
+def DATA1_num_packets(appts, todos, phones, anniversaries, appt_alarm=0xff):
 	data = makeDATA1payload(appts, todos, phones, anniversaries, appt_alarm=appt_alarm)
 
-	return makepkg([0x61, 0x01]+data)
+	return ceil(len(data)/27)
 
 # Takes lists of TimexAppointment, TimexTodo, TimexPhoneNumber
 # and TimexAnniversary objects

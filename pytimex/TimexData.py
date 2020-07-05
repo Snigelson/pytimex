@@ -41,8 +41,7 @@ class TimexTodo:
 		return bytes(data)
 
 class TimexPhoneNumber:
-	# TODO: Do not store numbers as integers, leading zeros will be removed
-	def __init__(self, 	number=1, label=""):
+	def __init__(self, 	number="1", label=""):
 		self.number=number
 		self.label=label
 
@@ -53,7 +52,8 @@ class TimexPhoneNumber:
 	def __bytes__(self):
 		# TODO: This only works with numbers 10 digits or less, and no type indication
 		# Convert to digits
-		digits = [ord(x)-ord('0') for x in "{:d}".format(self.number)]
+		conv_table = {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'C':10,'F':11,'H':12,'P':13,'W':14,' ':15}
+		digits = [conv_table[x] for x in str(self.number)]
 		# Pad with F
 		t = [15]*12 # Make a "template" filled with F
 		t[-2-len(digits):-2] = digits # Replace part of template
@@ -101,6 +101,7 @@ class TimexTimezone:
 	def __str__(self):
 		return "Time zone with offset UTC{:+} named \"{}\", {} hour format".format(offset, name, format)
 
+
 class TimexAlarm:
 	def __init__(self, hour=0, minute=0, month=0, day=0, label="", audible=True):
 		self.hour = hour
@@ -127,6 +128,7 @@ class TimexAlarm:
 
 		return "Alarm at {:02d}:{:02d} on the {} of {}, label \"{}\", {}".format(
 			self.hour, self.minute, self.day, monthNamesAbbr[self.month], self.label, audible_str)
+
 
 class TimexData:
 	def __init__(self):
@@ -228,7 +230,7 @@ class TimexData:
 			len(self.phonenumbers)>0 or
 			len(self.anniversaries)>0
 		):
-			data += bytes(makeSTART2(1))
+			data += bytes(makeSTART2(DATA1_num_packets(self.appointments, self.todos, self.phonenumbers, self.anniversaries)))
 			data += bytes(makeDATA1(self.appointments, self.todos, self.phonenumbers, self.anniversaries))
 			data += bytes(makeEND1())
 
