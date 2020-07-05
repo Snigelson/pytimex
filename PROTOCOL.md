@@ -4,6 +4,9 @@ I have added and corrected some information. There may be more differences
 between watch versions, but most information for the model 70 should be 
 correct.
 
+The watch I have tested most with is a model 70 which shows 786003 on 
+boot. I'm guessing that's some kind of model number or software version.
+
 Sound and app packets are not yet documented.
 
 
@@ -87,7 +90,7 @@ Third byte:
 - Low 2 bits contain high bits of third character
 
 Strings are terminated by a character with all ones (0x3F). If there are 
-any 0 bytes in the end, these are removed.
+any 0 bytes after packing, these are removed.
 
 If the above explanation, maybe some pseudo code can clear it up:
 
@@ -326,6 +329,13 @@ No payload
 | 5     | Day (0 for every day)              |
 | 6->13 | Label, unpacked                    |
 | 14    | 1 if audible, otherwise 0          |
+
+The original software always sends all of the alarms. I suppose that's 
+good to keep the alarms guaranteed in synchronization.
+
+Model 70: It seems to be possible to send only some alarms, if you want. 
+The alarms that are not sent are unchanged. Sending alarms with index
+greater than 5 might make the watch hang. Don't do this.
 
 
 ### 0x70 - SALARM
