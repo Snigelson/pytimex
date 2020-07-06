@@ -100,6 +100,10 @@ byte1 = (ch3&0x0F)<<4) | ((ch2>>2)&0x0F)
 byte2 = (ch4&0x3F)<<2) | ((ch3&0x30)>>4)
 ```
 
+Packed string max length is 15 characters + terminator. If there is no 
+terminator in the 16 characters, the watch will start displaying its own 
+memory.
+
 
 ## Data packets
 
