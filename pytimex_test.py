@@ -10,26 +10,26 @@ def listhex(pkg):
 d = pytimex.TimexData()
 
 # Try all the features!
-a = d.addNewAppointment(5, 31, 0x27, "test")
-d.addNewTodo(3, "code stuff")
-d.addNewPhoneNumber(73579, "e.t. home")
+a = d.addNewAppointment(5, 31, 0x27, "meet a guy? ")
+d.addNewTodo(3, "buy coffee")
+d.addNewTodo(12, "code stuff") # Priority C
+d.addNewPhoneNumber("5P4C3", "e.t. home")
+d.addNewPhoneNumber("0722339677", "some guy")
 d.addNewAnniversary(6, 6, "national day")
 
-# You can modify these later:
-a.label = "hello"
+# You can modify the objects from above later:
+a.label = "funny meeting"
 
-# Setup a good timezone and a silly one just for testing
+# Setup two timezones
 d.setTimezone(1, +2, 24, "cet")
-d.setTimezone(2, -5, 24, "est")
+d.setTimezone(2, 0, 24, "utc")
 d.sendTime = True
 
 # Add some alarms.
-# Don't know if you need to send all five at once or if you can overwrite them individually.
-d.addNewAlarm(9,0,0,0,"sample",True)
-d.addNewAlarm(hour=10, minute=15, month=0, day=30, label="plug meeting", audible=True)
-d.addNewAlarm(0, 0, 0, 0, "test", False)
-d.addNewAlarm(0, 0, 0, 0, "alarm #4", False)
-d.addNewAlarm(0, 0, 0, 0, "alarm #5", False)
+# You can overwrite them individually, but currently I have no way of specifying
+# alarm ID here.
+d.addNewAlarm(7,0,0,0,"wake up@",True)
+d.addNewAlarm(hour=10, minute=15, month=0, day=30, label="monthly meeting", audible=True)
 
 # Get data to be transferred
 data = bytes(d)
