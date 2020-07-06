@@ -29,16 +29,17 @@ More specific work:
 
 ## "Timex Notebook Adapter"
 
-A not too intelligent device. Powered by the CTS line of the serial port, 
-like many devices of its time. Initially respons to commands "x" (reply 
-with "x", used for identification), "?" (reply with "M764\0", probably 
-some kind of model name) and "U" (enter send mode, actually 0x55 which is 
-the first sync bytes sent). After "U" is received, all bytes are sent 
-over the IR LED. To get back to the initial state, device power must be 
-cycled. This is done by pulling CTS low for a few hundred milliseconds.
+A device for sending data to the watch if you don't have access to a CRT 
+monitor. Connected via serial port and powered by the CTS line. Initially 
+responds to commands "x" (reply with "x", used for identification), "?" 
+(reply with "M764\0", probably some kind of model name) and 0x55 (enter 
+send mode, actually the first sync bytes sent). After 0x55 is received, 
+all bytes are sent over the IR LED. To get back to the initial state, 
+device power must be cycled. This is done by pulling CTS low for a few 
+hundred milliseconds.
 
-When a byte is sent to the adapter, it replies with the same byte. I'm 
-assuming it's done to keep things in sync.
+When a byte is sent to the adapter, it replies with the same byte to keep
+things in sync.
 
 Since I do not have access to an actual adapter, I have no way of
 verifying the timings of the device. It's a safe bet, though, that they
@@ -49,22 +50,27 @@ locked to the CRT refresh.
 
 ## The Blaster
 
-Initially, I implemented the above protocol on an Arduino with hopes of 
-being able to both turn it into a replacement adapter for the original 
-software and use it with my library, but there were some issues with 
-timing. I got it to transfer data correctly when the data was already on 
-the Arduino but there were issues when interspersing serial communication 
-and turning off interrupts to get the bit timing correct. I might upload 
-that version if I can get it working correctly.
-
-The implementation currently in this repository is a lot simpler. It 
-reads a data length (2 bytes, big endian), allocates a buffer and reads 
-that many bytes, and then transfers them. Sync bytes must be sent by the 
-PC, and timing is done entirely on the Arduino.
+I have implemented the above protocol on an Arduino with hopes of being 
+able to both turn it into a replacement adapter for the original software 
+and to use it with my library. Currently, it implements the protocol as 
+far as I can tell, but since it adds its own delays it will probably not 
+work too well with the original software. I might explore this further in 
+the future.
 
 Hardware wise, you need an Arduino with ATmega328 (168 would probably 
 work too) with 16 MHz clock. Should work with Uno, Nano, Duemilanove and 
-others. Connect an IR LED to pin 12 with a suitable resistor in series 
-and you're golden. Experiment with distance and LED frequency to get it 
-just right. Some LEDs are very focused and offers only a narrow beam, so 
-if you have the option, try to find one with a wide beam.
+others. Connect an LED to pin 12 (maybe with a suitable resistor in 
+series) and that's it. Experiment with distance and light frequency to get 
+it just right. Some LEDs are very focused and offers only a narrow beam, 
+so if you have the option, try to find one with a wide beam.
+
+As for the LED, I have tried a few different types ranging from IR to 
+blue, from classic low-intensity red to modern cold white, and from what 
+I can tell, the watch receives well on all of them. The only difference 
+is in how close, how perpendicular, and how aligned the watch needs to 
+be. If it is too close, the receiver seems to saturate and nothing is 
+received.
+
+What ultimately worked best for me was to use a high-intensity white LED 
+without a resistor and shine it onto a surface. That way, the angle and 
+position of the watch didn't matter as much.
