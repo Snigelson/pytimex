@@ -38,13 +38,16 @@ approximately 488 µs. So this sort of makes sense.
 Data transfer using CRT is done at 640x480@60Hz. At this resolution and 
 frequency, the horizontal refresh frequency is 31.46875 kHz, so one line 
 is drawn approximately every 31.78 µs. Using these timings, we can 
-quantify the above measurements and conclude that one bit is one line and 
+quantize the above measurements and conclude that one bit is one line and 
 a bit is sent every 15 lines. The watch seems to be a bit flexible on 
 this though.
 
 Data bytes are separated by approximately 2 ms, and packets are separated 
-by approximately 240 ms. The interpacket delay is also present after
-each block of synchronization bytes.
+by approximately 240 ms. The interpacket delay is also present after each 
+block of synchronization bytes (i.e. after all 0x55 is sent and after all 
+0xAA are sent). The 2 ms interbyte delay happens to be the same time it 
+takes to send two bytes at 9600 baud, in this case the computer sending 
+the data byte and receiving confirmation it was sent.
 
 
 ## Synchronization
@@ -68,7 +71,8 @@ The character set is:
 0123456789
 abcdefghijklmnopqrstuvwxyz
  !"#$%&'()*+,-./:\[divide]=[bell symbol]?
-[Underscore][underscored check mark][left arrow][right arrow][big square][small square]
+[Underscore][underscored check mark][left arrow]
+[right arrow][big square][small square]
 ```
 
 The small square can be used only on unpacked strings, since on packed 
@@ -303,7 +307,7 @@ and that space is used for a number instead.
 
 Another peculiarity is that you can send multiple numbers for the same 
 name by completely omitting the name, not even sendig a string 
-terminator, on successive messages. These packages will always be 7 bytes 
+terminator, on successive messages. These packets will always be 7 bytes 
 long.
 
 
