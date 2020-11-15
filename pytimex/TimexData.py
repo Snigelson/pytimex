@@ -85,7 +85,7 @@ class TimexAnniversary:
 class TimexTimezone:
 	def __init__(self, offset=0, format=24, name=""):
 		self.offset = offset
-		self._format = format
+		self.format = format
 		self.name = name
 
 	@property
@@ -96,7 +96,7 @@ class TimexTimezone:
 	def format(self, f):
 		if not f in [12,24]:
 			raise Exception("Time format must be 12 or 24 hours")
-		self.format = f
+		self._format = f
 
 	def __str__(self):
 		return "Time zone with offset UTC{:+} named \"{}\", {} hour format".format(offset, name, format)
@@ -146,10 +146,6 @@ class TimexData:
 	def setTimezone(self, tzno, offset, format, name):
 		if tzno not in [1,2]:
 			raise Exception("Time zone number must be 1 or 2!")
-
-		# TODO: Move these checks to time zone class
-		if format not in [12,24]:
-			raise Exception("Time format must be 12 or 24!")
 
 		if len(name)>3:
 			raise Exception("Max length for time zone name is 3 characters!")
