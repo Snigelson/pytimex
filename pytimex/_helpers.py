@@ -5,17 +5,6 @@ from math import ceil
 
 # Create character conversion table (to be verified)
 # Called at first call of str2timex
-"""
-char set for labels is:   (6 bits per char)
-0-9 : digits
-10-36: letters
-37-63: symbols:
-space !"#$%&'()*+,-./;\
-divide =
-bell (image, not sound)
-?
-"""
-
 char_conv = None
 def make_char_conv():
 	global char_conv
@@ -91,8 +80,8 @@ def pkgstr(pkg):
 ### Packet makers
 
 # Make start package.
-def makeSTART1():
-	return makepkg([0x20, 0x00, 0x00, 0x01])
+def makeSTART1(version=1):
+	return makepkg([0x20, 0x00, 0x00, version])
 
 # num_data1: Number of data1 packets following
 def makeSTART2(num_data1):
