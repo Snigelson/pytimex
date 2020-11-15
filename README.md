@@ -16,7 +16,6 @@ program. Much easier than getting it from the CRT!
 ## TODO
 
 * Implement protocol for 150 and 150s
-* Check if all 5 alarms must be sent every time
 * Split up DATA1 packets if too long
 * Test everything more extensively (most tests have been comparing to
   data from the original Timex software) - set up unit tests

@@ -230,8 +230,9 @@ class TimexData:
 			data += bytes(makeDATA1(self.appointments, self.todos, self.phonenumbers, self.anniversaries))
 			data += bytes(makeEND1())
 
-		# I don't know if all five alarms must be sent every time.
-		# If so, make dummy alarms.
+		# It's not necessary to send all alarms at once. Though this
+		# will leave the alarms not explicitly overwritten. So it might
+		## be a good idea to do that. Or make it an option?
 		if len(self.alarms)>0:
 			i=1
 			for a in self.alarms:
