@@ -1,5 +1,5 @@
 # Data Blaster for Timex
-# Will not work with original adapter due to timing; in the orinignal
+# Will not work with original adapter due to timing; in the original
 # implementation timing is set by the PC
 
 import serial
