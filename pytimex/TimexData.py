@@ -1,6 +1,14 @@
 import datetime
 from ._helpers import *
 
+class _WatchModels:
+	def __init__(self):
+		self.DL70 = 1
+		self.DL100 = 2
+		self.DL150 = 3
+
+WatchModels = _WatchModels()
+
 monthNamesAbbr = [
 	"<unknown>", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -131,7 +139,7 @@ class TimexAlarm:
 
 
 class TimexData:
-	def __init__(self):
+	def __init__(self, model=WatchModels.DL70):
 		self.appointments = []
 		self.todos = []
 		self.phonenumbers = []
@@ -146,6 +154,7 @@ class TimexData:
 		# for the time between building the packet and the watch
 		# receiving it.
 		self.secondsOffset=8
+		self.model=model
 
 	def setTimezone(self, tzno, offset, format, name):
 		if tzno not in [1,2]:
@@ -213,7 +222,11 @@ class TimexData:
 
 	def __bytes__(self):
 		data = b''
-		data += bytes(makeSTART1())
+
+		if model == WatchModels.DL70:
+			data += bytes(makeSTART1(version=1))
+		elif model == WatchModels.DL150:
+			data += bytes(makeSTART1(version=3))
 
 		if self.sendTime:
 			now = datetime.datetime.utcnow() + datetime.timedelta(0,self.secondsOffset)
