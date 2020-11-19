@@ -142,6 +142,10 @@ class TimexData:
 			TimexTimezone(0, 24, "utc"),
 			TimexTimezone(-5, 12, "est")
 		]
+		# Number of seconds to add to time when blasting, to compensate
+		# for the time between building the packet and the watch
+		# receiving it.
+		self.secondsOffset=8
 
 	def setTimezone(self, tzno, offset, format, name):
 		if tzno not in [1,2]:
@@ -212,7 +216,7 @@ class TimexData:
 		data += bytes(makeSTART1())
 
 		if self.sendTime:
-			now = datetime.datetime.utcnow()
+			now = datetime.datetime.utcnow() + datetime.timedelta(0,self.secondsOffset)
 			tz1time = now+datetime.timedelta(hours=self.tz[0].offset)
 			tz2time = now+datetime.timedelta(hours=self.tz[1].offset)
 			data += bytes(makeTZ(2, tz2time, self.tz[1].format))
