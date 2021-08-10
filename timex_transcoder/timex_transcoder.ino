@@ -1,23 +1,25 @@
-/* Implementation of transcoder behaving more closely to the fabled
- * Notebook Adapter. Hopefully, it can be made compatible with the
- * original software.
+/* Implementation of transcoder, behaving closely to the Notebook
+ * Adapter. Compatible with the original Timex software.
  *
- * This code should work on any Arduino with ATmega328 at 16 MHz, such
- * as Duemillanove, Uno, Nano, and others.
+ * This code should work on any Arduino with an ATmega328 at 16 MHz,
+ * such as Duemillanove, Uno, Nano, and others.
  *
  * The transmission is paced by the transmission rate between PC and
  * Blaster being 9600 baud. Inter-package delay can be done on either PC
  * or blaster side. The first case works better with the Python software
- * and the latter with the original software. */
-
-/* If this define is enabled, the blasting will be faster. It works fine
- * most of the time, but the slower speed will probably be more reliable.
+ * and I believe the latter with the original software. (TODO: verify)
  */
-#undef TURBO_MODE
 
-#define LEDPIN 13
-#define IRLED 12
-#define CTSPIN 11
+/* If TURBO_MODE is defined, the blasting will be faster. It works fine
+ * most of the time, but the slower speed will probably be more reliable
+ * in worse lighting conditions.
+ */
+#define TURBO_MODE
+
+#define LEDPIN 13 /* Onboard LED pin */
+#define IRLED 12 /* Comm. LED pin */
+#define CTSPIN 11 /* Connect to CTS to reset when using the original software */
+#define TESTPIN 10 /* Connect to GND to get a continuous stream of sync bytes */
 
 
 /* =========== DATA TRANSCODER FUNCTIONS ========================= */
@@ -51,47 +53,47 @@ inline void startTimer(int lowcnt, int hicnt)
 
 
 #ifdef TURBO_MODE
-/* These values are faster than sending using CRT but seems to work most of the time. */
+	/* These values are faster than the original software sends using the
+	* CRT, but they seem to work most of the time. */
 
-/* Bit length */
-#define BITLEN_L 252
-#define BITLEN_H 1
+	/* Bit length */
+	#define BITLEN_L 252
+	#define BITLEN_H 1
 
-/* Bit interval */
-#define SPACELEN_L 206
-#define SPACELEN_H 28
+	/* Bit interval */
+	#define SPACELEN_L 206
+	#define SPACELEN_H 28
 
-#define INTERBYTE_L 0
-#define INTERBYTE_H 180
+	#define INTERBYTE_L 0
+	#define INTERBYTE_H 180
 
-#define INTERBYTE_PACKAGE 25
-
+	#define INTERBYTE_PACKAGE 25
 #else
-/* Timing values based more on the CRT timings. */
+	/* Timing values based more on the CRT timings. */
 
-/* Bit length */
-/* 31.78 kHz => 16 MHz / 31.78 kHz ~= 508 counts (Approx 0.0318 ms bit length) */
-#define BITLEN_L 252
-#define BITLEN_H 1
+	/* Bit length */
+	/* 31.78 kHz => 16 MHz / 31.78 kHz ~= 508 counts (Approx 0.0318 ms bit length) */
+	#define BITLEN_L 252
+	#define BITLEN_H 1
 
-/* Bit interval */
-/* 31.47 kHz / (15-1) => 7118 counts (Approx 0.445 ms between bits, or 0.477 ms bit interval or 2098 baud) */
-#define SPACELEN_L 206
-#define SPACELEN_H 28
+	/* Bit interval */
+	/* 31.47 kHz / (15-1) => 7118 counts (Approx 0.445 ms between bits, or 0.477 ms bit interval or 2098 baud) */
+	#define SPACELEN_L 206
+	#define SPACELEN_H 28
 
-/* Mostly a mode-up value that when combined with INTERBYTE_PACKAGE ends up with a sensible delay between packets */
-#define INTERBYTE_L 0
-#define INTERBYTE_H 220
+	/* Mostly a mode-up value that when combined with INTERBYTE_PACKAGE ends up with a sensible delay between packets */
+	#define INTERBYTE_L 0
+	#define INTERBYTE_H 220
 
-/* Number of times to repeat interbyte delay between packages */
-/* Set this to 0 for compatibility with original software */
-#define INTERBYTE_PACKAGE 45
-
+	/* Number of times to repeat interbyte delay between packages */
+	/* Set this to 0 for compatibility with original software */
+	#define INTERBYTE_PACKAGE 45
 #endif
 
 bool past55sync;
 bool pastAAsync;
 unsigned int packetLeft;
+bool transmitState;
 
 void setupTranscode()
 {
@@ -116,7 +118,7 @@ void transcodeByte(unsigned char curbyte)
 {
 	if (curbyte != 0x55) {
 		if (!past55sync) {
-			/* Delay between 0x55-sync and 0xAA-sync - TODO: Test if this is necessary. */
+			/* Delay between 0x55-sync and 0xAA-sync - TODO: Test if this is necessary; doesn't seem to be. */
 			//interPacketDelay();
 		}
 		past55sync = true;
@@ -160,8 +162,6 @@ void transcodeByte(unsigned char curbyte)
 
 /* ======= MAIN FUNCTIONS =============== */
 
-bool transmitState;
-
 void setup()
 {
 	Serial.begin(9600);
@@ -170,6 +170,7 @@ void setup()
 	digitalWrite(LEDPIN, LOW);
 
 	pinMode(CTSPIN, INPUT_PULLUP);
+	pinMode(TESTPIN, INPUT_PULLUP);
 
 	setupTranscode();
 
@@ -180,25 +181,41 @@ void loop()
 {
 	unsigned char curbyte;
 
-	if (!digitalRead(CTSPIN)) {
-		transmitState = false;
+	/* If test pin is low, output sync bytes */
+	if (!digitalRead(TESTPIN)) {
+		transcodeByte(0x55);
+		delay(2);
+		return;
 	}
 
+	/* If CTS is pulled low, reset transmission state. This controls the
+	 * power to the original device, so essentially resets it.
+	 */
+	if (!digitalRead(CTSPIN)) {
+		setupTranscode();
+	}
+
+	/* Read byte if available */
 	if (Serial.available()) {
 		curbyte = Serial.read();
 	} else return;
 
+	/* If we're not in transmit state, handle commands.
+	 * Else, transcode byte.
+	 */
 	if (!transmitState) {
-		/* Handle control bytes */
 		if (curbyte == 'x') {
+			/* Knock knock */
 			Serial.print('x');
 		} else
 		if (curbyte == '?') {
+			/* Device query */
 			Serial.print("M764");
 			Serial.write((byte)0);
 		}
 		else
 		if (curbyte == 'U') {
+			/* Enter transmit state */
 			transmitState = true;
 			Serial.print('U');
 		}
@@ -206,5 +223,4 @@ void loop()
 		transcodeByte(curbyte);
 		Serial.write(curbyte);
 	}
-
 }

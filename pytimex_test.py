@@ -1,3 +1,7 @@
+# Tests out the library and blasts some data
+
+import sys
+
 import pytimex
 
 def listhex(pkg):
@@ -39,8 +43,14 @@ print("Data to be blasted:")
 print(listhex(data))
 print("")
 
+
+try:
+	port = sys.argv[1]
+except:
+	port = "/dev/ttyACM0"
+
 # Initialize blaster
-b = pytimex.Blaster("/dev/ttyACM0")
+b = pytimex.Blaster(port)
 
 if not b.identify():
 	print("Could not verify adapter :(")
