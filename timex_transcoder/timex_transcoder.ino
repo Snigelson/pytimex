@@ -5,10 +5,34 @@
  * such as Duemillanove, Uno, Nano, and others.
  *
  * The transmission is paced by the transmission rate between PC and
- * Blaster being 9600 baud. Inter-package delay can be done on either PC
- * or blaster side. The first case works better with the Python software
- * and I believe the latter with the original software. (TODO: verify)
+ * Blaster being 9600 baud. Inter-packet delay can be done on either PC
+ * or blaster side. For the Python script, it's easier to have the
+ * blaster handle it. The original Timex software implements its own
+ * delays, but they do not interfere with the blaster ones.
  */
+
+
+/* To use, connect any bright LED from pin 12 to GND. Normally I'd
+ * recommend putting a resistor in series, but the pulses are fairly
+ * short so if you're not doing anything permanent it should work
+ * fine without it. Test it by connecting pin 10 to GND. The LED
+ * will look permanently lit, but hold up the watch in "COMM MODE"
+ * and it should beep and show "SYNCING".
+ *
+ * For the Python software, the data will be sent over USB.
+ * Plug and play!
+ *
+ * For the original Timex software, use an RS232 to UART converter
+ * and connect to pin 0 and 1 (RX and TX respectively) of the
+ * Arduino. You'll need to press the reset button before each transfer.
+ *
+ * It should, in theory, be possible to connect the CTS signal of the
+ * RS232 adapter to pin 11 to have it reset automatically. I say in
+ * theory since I have no adapter with that signal. Another way would
+ * be to power the blaster from that pin, like the original adapter.
+ *
+ */
+
 
 /* If TURBO_MODE is defined, the blasting will be faster. It works fine
  * most of the time, but the slower speed will probably be more reliable
@@ -61,13 +85,15 @@ inline void startTimer(int lowcnt, int hicnt)
 	#define BITLEN_H 1
 
 	/* Bit interval */
-	#define SPACELEN_L 206
-	#define SPACELEN_H 28
+	#define SPACELEN_L 0
+	#define SPACELEN_H 27
 
-	#define INTERBYTE_L 0
-	#define INTERBYTE_H 180
+	/* Inter-packet delay */
+	#define INTERPACK_L 0
+	#define INTERPACK_H 180
 
-	#define INTERBYTE_PACKAGE 25
+	/* Interpacket delay multiplier */
+	#define INTERPACK_MUL 25
 #else
 	/* Timing values based more on the CRT timings. */
 
@@ -81,13 +107,12 @@ inline void startTimer(int lowcnt, int hicnt)
 	#define SPACELEN_L 206
 	#define SPACELEN_H 28
 
-	/* Mostly a mode-up value that when combined with INTERBYTE_PACKAGE ends up with a sensible delay between packets */
-	#define INTERBYTE_L 0
-	#define INTERBYTE_H 220
+	/* Inter-packet delay. Mostly made up. */
+	#define INTERPACK_L 0
+	#define INTERPACK_H 220
 
-	/* Number of times to repeat interbyte delay between packages */
-	/* Set this to 0 for compatibility with original software */
-	#define INTERBYTE_PACKAGE 45
+	/* Number of times to repeat inter-packet delay */
+	#define INTERPACK_MUL 45
 #endif
 
 bool past55sync;
@@ -107,8 +132,8 @@ void setupTranscode()
 
 #define interPacketDelay() do {										\
 		digitalWrite(LEDPIN, LOW);									\
-		for (unsigned int ipd=0; ipd<INTERBYTE_PACKAGE; ipd++) {	\
-			startTimer(INTERBYTE_L, INTERBYTE_H);					\
+		for (unsigned int ipd=0; ipd<INTERPACK_MUL; ipd++) {	\
+			startTimer(INTERPACK_L, INTERPACK_H);					\
 			waitTimer();											\
 		}															\
 		digitalWrite(LEDPIN, HIGH);									\
@@ -117,10 +142,6 @@ void setupTranscode()
 void transcodeByte(unsigned char curbyte)
 {
 	if (curbyte != 0x55) {
-		if (!past55sync) {
-			/* Delay between 0x55-sync and 0xAA-sync - TODO: Test if this is necessary; doesn't seem to be. */
-			//interPacketDelay();
-		}
 		past55sync = true;
 		if (curbyte != 0xAA) {
 			pastAAsync = true;
@@ -128,9 +149,9 @@ void transcodeByte(unsigned char curbyte)
 	}
 
 	if (pastAAsync) {
-		/* Delay before each package */
+		/* Delay before each packet */
 		if (packetLeft <= 0) {
-			/* Get new packet length. First byte of package is package length, including this length byte. */
+			/* Get new packet length. First byte of packet is packet length, including this length byte. */
 			packetLeft = curbyte;
 			interPacketDelay();
 		}
