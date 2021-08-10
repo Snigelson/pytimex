@@ -7,7 +7,9 @@ correct.
 The watch I have tested most with is a model 70 which shows 786003 on 
 boot. I'm guessing that's some kind of model number or software version.
 
-Sound and app packets are not yet documented.
+I also got a hold of a model 150 (802003), and is investing its protocol.
+Slightly different but has has the same general structure. Sound and app
+packets are not yet documented.
 
 
 ## Physical level
@@ -148,8 +150,22 @@ probably add more info on order later.
 | 0x70 | SALARM | Sent after silent alarms            |
 | 0x21 | END2   | End of data transfer                |
 
+Packets 0x90, 0x91, 0x92, 0x93 and 0x71 are used for data in
+version 3. These are only somewhat documented here.
+
+| ID   | Name   | Description                         |
+| ---- | ------ | ----------------------------------- |
+| 0x90 | START3 | Marks start and type of following packets |
+| 0x91 | DATA   |                                     |
+| 0x92 | END    |                                     |
+| 0x93 | CLEAR  |                                     |
+| 0x71 | BEEPS  |                                     |
+
+
 
 ### 0x20 - START1
+
+Versions: All
 
 | Byte | Description |
 | ---- | ----------- |
@@ -163,6 +179,8 @@ Example packet: 0x07 0x20 0x00 0x00 0x01 0xc0 0x7f
 
 
 ### 0x30 - TIME
+
+Versions: 1
 
 | Byte | Description                      |
 | ---- | -------------------------------- |
@@ -179,6 +197,8 @@ Example packet: 0x07 0x20 0x00 0x00 0x01 0xc0 0x7f
 
 ### 0x31 - TZNAME
 
+Versions: 1
+
 | Byte | Description                      |
 | ---- | -------------------------------- |
 | 1    | Timezone ID (1 or 2)             |
@@ -193,8 +213,29 @@ Example: 0x02 0x0e 0x1c 0x1d - timezone 2 named EST
 
 ### 0x32 - TIMETZ
 
+Versions: 3, 4
+
 Combination of time packet and time zone name packet. Also includes
 information on date format, I believe. For models 150 and 150s.
+
+| Byte | Description                      |
+| ---- | -------------------------------- |
+| 1    | Timezone ID (1 or 2)             |
+| 2    | Second                           |
+| 3    | Hour                             |
+| 4    | Minute                           |
+| 5    | Month                            |
+| 6    | Day of month                     |
+| 7    | Year (mod 100)                   |
+| 8    | Character 1 of timezone name     |
+| 9    | Character 2 of timezone name     |
+| 10   | Character 3 of timezone name     |
+| 11   | Day of week (0=monday, 6=sunday) |
+| 12   | 12h format (1) or 24h format (2) |
+| 13   | Unknown (always 0x02?) Possibly date format. |
+
+
+
 
 ### 0x60 - START2
 
@@ -256,7 +297,7 @@ Time is encoded in 15 minute intervals since midnight, such that 08:45 is
 
 Model 70: If a value of 90 or higher is used, time will not wrap. 90 will 
 show as 24:00, 91 as 24:15, and 255 as 63:45. This will probably not work 
-with alarms. Month and day is not boundary checked either.
+with alarms. Month and day are not boundary checked either.
 
 
 #### Todo record
@@ -323,10 +364,12 @@ long.
 
 ### 0x62 - END1
 
-No payload
+No payload. Marks end of DATA1 packets.
 
 
 ### 0x50 - ALARM
+
+Versions: 1, 3
 
 | Byte  | Description                        |
 | ----- | ---------------------------------- |
@@ -345,21 +388,42 @@ Model 70: It seems to be possible to send only some alarms, if you want.
 The alarms that are not sent are unchanged. Sending alarms with index
 greater than 5 might make the watch hang. Don't do this.
 
+After silent alarms, send a 0x70, writing 0 to address Alarm ID + 0x61. 
+For example, for alarm 3 send 0x70 with payload 0x00 0x64 0x00. I think 
+this is sent to patch some firmware error in the watches. To be 
+investigated!
 
-### 0x70 - SALARM
+Model 150:
 
-Didn't know what to call this. Sent after silent alarms
+
+### 0x70 - MEM
+
+Versions: 1, 
+
+Didn't know what to call this. Sent after silent alarms on version 1,
+not sent on version 3.
 
 | Byte | Description                        |
 | ---- | ---------------------------------- |
-| 1    | Always 0                           |
-| 2    | ID of preceding alarm + 0x61       |
-| 3    | Always 0                           |
+| 1    | High address                       |
+| 2    | Low address                        |
+| 3+   | Data to write                      |
+
+According to documentation at http://www.toebes.com/Datalink/download.html,
+this is a package to write data to a specific address in memory. Any number
+of bytes may be written.
 
 
-### 0x?? - ALARM2
+### 0x71 - BEEPS
 
-Alarm packet for model 150 and 150s. To be documented.
+Versions: 1?, 3
+
+| Byte | Description                        |
+| ---- | ---------------------------------- |
+| 1    | Hourly chimes (0 off, else on)     |
+| 2    | Button beeps (0 off, else on)      |
+
+TODO: Test this
 
 
 ### 0x21 - END2

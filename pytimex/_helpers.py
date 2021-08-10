@@ -212,6 +212,7 @@ def makeALARM(alarm, seq):
 	pkgdata = makepkg([0x50]+data)
 
 	# Add that packet that's present after inaudible alarms
+	# TODO: Don't do this here, see protocol documentation
 	if not alarm.audible:
 		data = [0, 0x61+seq, 0]
 		pkgdata += makepkg([0x70]+data)
