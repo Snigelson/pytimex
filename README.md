@@ -48,26 +48,16 @@ locked to the CRT refresh.
 
 ## The Blaster
 
-I have implemented the above protocol on an Arduino with hopes of being 
-able to both turn it into a replacement adapter for the original software 
-and to use it with my library. Currently, it implements the protocol as 
-far as I can tell, but since it adds its own delays it will probably not 
-work too well with the original software. I might explore this further in 
-the future.
+Arduino code for the above protocol is available in `timex_transcoder`.
+It works both with the Pyhton code, and with the original Timex software
+using an RS232 to UART converter.
 
-Hardware wise, you need an Arduino with ATmega328 (168 would probably 
-work too) with 16 MHz clock. Should work with Uno, Nano, Duemilanove and 
-others. Connect an LED to pin 12 (maybe with a suitable resistor in 
-series) and that's it. Experiment with distance and light frequency to get 
+To use it you need an Arduino with ATmega328 (168 would probably work too)
+with 16 MHz clock. Should work with Uno, Nano, Duemilanove and 
+others. Connect a bright LED to pin 12 (maybe with a suitable resistor in 
+series) and that's it. Experiment with distance and intensity to get 
 it just right. Some LEDs are very focused and offers only a narrow beam, 
-so if you have the option, try to find one with a wide beam.
-
-As for the LED, I have tried a few different types ranging from IR to 
-blue, from classic low-intensity red to modern cold white, and from what 
-I can tell, the watch receives well on all of them. The only difference 
-is in how close, how perpendicular, and how aligned the watch needs to 
-be. If it is too close, the receiver seems to saturate and nothing is 
-received.
+so if you have the option, try to find a bright one with a wide beam.
 
 What ultimately worked best for me was to use a high-intensity white LED 
 without a resistor and shine it onto a surface. That way, the angle and 
