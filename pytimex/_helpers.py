@@ -254,3 +254,8 @@ def makeALARM(alarm, seq):
 		pkgdata += makepkg([0x70]+data)
 
 	return bytes(pkgdata)
+
+def makeBEEPS(hourly=0, button=0):
+	data = [hourly, button]
+
+	return makepkg([0x71]+data)
