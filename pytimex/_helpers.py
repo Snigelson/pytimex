@@ -3,29 +3,45 @@
 from crccheck.crc import CrcArc
 from math import ceil
 
-# Create character conversion table (to be verified)
-# Called at first call of str2timex
-char_conv = None
-def make_char_conv():
-	global char_conv
+# Timex character set conversion table
 
-	# All lowercase characters. Using semicolon (;) for divide symbol and at (@) for bell symbol
-	# Underscore, underscored check mark, left arrow, right arrow, big block, small square/terminator
-	# Small square can be used only on unpacked strings, since on packed strings it is interpreted as a string terminator.
-	dst = "0123456789abcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:\\;=@?ABCDEF"
-	src = range(len(dst))
-	char_conv = {k:v for k,v in zip(dst,src)}
+# All lowercase characters. Using semicolon (;) for divide symbol
+# and at (@) for bell symbol.
+#
+# Underscore, underscored check mark, left arrow, right arrow, big
+# block, small square/terminator is represented by uppercase A, B,
+# C, D, E, F respectively.
+#
+# Small square can be used only on unpacked strings, since on
+# packed strings it is interpreted as a string terminator.
+
+#dst = "0123456789abcdefghijklmnopqrstuvwxyz !\"#$%&'()*+,-./:\\;=@?ABCDEF"
+#src = range(len(dst))
+#char_conv = {k:v for k,v in zip(dst,src)}
+
+char_conv = {
+	'0':  0, '1':  1, '2':  2, '3':  3, '4':  4, '5':  5, '6':  6, '7':  7,
+	'8':  8, '9':  9, 'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15,
+	'g': 16, 'h': 17, 'i': 18, 'j': 19, 'k': 20, 'l': 21, 'm': 22, 'n': 23,
+	'o': 24, 'p': 25, 'q': 26, 'r': 27, 's': 28, 't': 29, 'u': 30, 'v': 31,
+	'w': 32, 'x': 33, 'y': 34, 'z': 35, ' ': 36, '!': 37, '"': 38, '#': 39,
+	'$': 40, '%': 41, '&': 42, "'": 43, '(': 44, ')': 45, '*': 46, '+': 47,
+	',': 48, '-': 49, '.': 50, '/': 51, ':': 52, '\\':53, ';': 54, '=': 55,
+	'@': 56, '?': 57, 'A': 58, 'B': 59, 'C': 60, 'D': 61, 'E': 62, 'F': 63
+}
 
 # Convert string to timex string format using table from above
-def str2timex(string):
-	if char_conv is None:
-		make_char_conv()
+def str2timex(string, packed=False):
 	out = []
 	for c in string:
 		if not c in char_conv:
 			raise Exception("Invalid character {} in string!".format(c))
 		out.append(char_conv[c])
-	return out
+
+	if packed:
+		return pack4to3(out)
+	else:
+		return out
 
 # Pack 4 bytes in 3, used for strings
 def pack4to3(indata):
@@ -192,6 +208,26 @@ def makeTZNAME(tzno, tzname):
 	data = [tzno]
 	data+= str2timex(tzname)
 	return makepkg([0x31]+data)
+
+def makeTIMETZ(tzno, tztime, timeformat, tzname, dateformat = 2):
+	if len(tzname)>3:
+		raise Exception("Time zone name too long!")
+	elif len(tzname)<3:
+		tzname += " "*(3-len(tzname))
+
+	data =  [tzno]
+	data += [tztime.second, tztime.hour, tztime.minute]
+	data += [tztime.month, tztime.day, tztime.year%100]
+	data += str2timex(tzname)
+	data += [tztime.weekday()]
+
+	if format == 12:
+		data += [1]
+	else:
+		data += [2]
+
+	data += [dateformat]
+	return makepkg([0x32]+data)
 
 # Takes an alarm number and a sequence ID (1-5)
 def makeALARM(alarm, seq):
