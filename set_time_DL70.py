@@ -14,7 +14,7 @@ except:
 blaster = pytimex.Blaster(port)
 
 # Setup data to be sent
-d = pytimex.TimexData(model=pytimex.WatchModels.DL70)
+d = pytimex.TimexData(model=pytimex.DL70)
 
 # Setup two timezones
 d.setTimezone(1, +2, 24, "cet")
