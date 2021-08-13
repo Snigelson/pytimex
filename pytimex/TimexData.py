@@ -1,14 +1,21 @@
 import datetime
 from ._helpers import *
 
-class _WatchModels:
-	def __init__(self):
-		self.DL70 = 1
-		self.DL100 = 2
-		self.DL150 = 3
+class WatchModel:
+	def __init__(self, name="DL50", protocol=1):
+		self.name = name
+		self.protocol = protocol
 
-WatchModels = _WatchModels()
+	def __str__(self):
+		return self.name
 
+DL50   = WatchModel('DL50', 1) # I think this uses the same protocol as the 70
+DL70   = WatchModel('DL70', 1)
+DL150  = WatchModel('DL150', 3)
+DL150s = WatchModel('DL150s', 4)
+
+
+# Month name lookup
 monthNamesAbbr = [
 	"<unknown>", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -32,6 +39,7 @@ class TimexAppointment:
 		data = [len(data)+1] + data
 		return bytes(data)
 
+
 class TimexTodo:
 	def __init__(self, 	prio=0, label=""):
 		self.prio=prio
@@ -48,6 +56,7 @@ class TimexTodo:
 		data = [len(data)+1] + data
 		return bytes(data)
 
+
 class TimexPhoneNumber:
 	def __init__(self, 	number="1", label=""):
 		self.number=number
@@ -60,10 +69,13 @@ class TimexPhoneNumber:
 	def __bytes__(self):
 		# TODO: This only works with numbers 10 digits or less, and no type indication
 		# Convert to digits
-		conv_table = {'0':0,'1':1,'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'C':10,'F':11,'H':12,'P':13,'W':14,' ':15}
+		conv_table = {
+			'0':  0, '1':  1, '2':  2, '3':  3, '4':  4, '5':  5, '6':  6, '7':  7,
+			'8':  8, '9':  9, 'C': 10, 'F': 11, 'H': 12, 'P': 13, 'W': 14, ' ': 15
+		}
 		digits = [conv_table[x] for x in str(self.number)]
-		# Pad with F
-		t = [15]*12 # Make a "template" filled with F
+		# Pad with spaces
+		t = [15]*12 # Make a "template" filled with char 15
 		t[-2-len(digits):-2] = digits # Replace part of template
 		# Smush it up
 		data = [d[1]<<4|d[0] for d in zip(t[0::2], t[1::2]) ]
@@ -89,6 +101,7 @@ class TimexAnniversary:
 		data = data + pack4to3(str2timex(self.label))
 		data = [len(data)+1] + data
 		return bytes(data)
+
 
 class TimexTimezone:
 	def __init__(self, offset=0, format=24, name=""):
@@ -139,7 +152,7 @@ class TimexAlarm:
 
 
 class TimexData:
-	def __init__(self, model=WatchModels.DL70):
+	def __init__(self, model=DL70):
 		self.appointments = []
 		self.todos = []
 		self.phonenumbers = []
@@ -223,19 +236,20 @@ class TimexData:
 	def __bytes__(self):
 		data = b''
 
-		if model == WatchModels.DL70:
-			data += bytes(makeSTART1(version=1))
-		elif model == WatchModels.DL150:
-			data += bytes(makeSTART1(version=3))
+		data += bytes(makeSTART1(version=self.model.protocol))
 
 		if self.sendTime:
 			now = datetime.datetime.utcnow() + datetime.timedelta(0,self.secondsOffset)
 			tz1time = now+datetime.timedelta(hours=self.tz[0].offset)
 			tz2time = now+datetime.timedelta(hours=self.tz[1].offset)
-			data += bytes(makeTZ(2, tz2time, self.tz[1].format))
-			data += bytes(makeTZ(1, tz1time, self.tz[0].format))
-			data += bytes(makeTZNAME(1, self.tz[0].name))
-			data += bytes(makeTZNAME(2, self.tz[1].name))
+			if self.model.protocol == 1:
+				data += bytes(makeTZ(2, tz2time, self.tz[1].format))
+				data += bytes(makeTZ(1, tz1time, self.tz[0].format))
+				data += bytes(makeTZNAME(1, self.tz[0].name))
+				data += bytes(makeTZNAME(2, self.tz[1].name))
+			elif self.model.protocol == 3 or self.model.protocol == 4:
+				data += bytes(makeTIMETZ(1, tz1time, self.tz[0].format, self.tz[0].name))
+				data += bytes(makeTIMETZ(2, tz2time, self.tz[1].format, self.tz[1].name))
 
 		if (
 			len(self.appointments)>0 or
