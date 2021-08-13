@@ -5,10 +5,7 @@ import sys
 import pytimex
 
 def listhex(pkg):
-	outstr = ""
-	for b in pkg:
-		outstr += "0x{:02x}, ".format(b)
-	return outstr[:-1]
+	return ', '.join(["0x{:02x}".format(b) for b in pkg])
 
 # Setup data to be sent
 d = pytimex.TimexData()
