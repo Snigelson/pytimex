@@ -4,6 +4,9 @@ I have added and corrected some information. There may be more differences
 between watch versions, but most information for the model 70 should be 
 correct.
 
+Some info also from http://www.toebes.com/Datalink/download.html. He
+has a lot of low level information about app programming and such.
+
 The watch I have tested most with is a model 70 which shows 786003 on 
 boot. I'm guessing that's some kind of model number or software version.
 
@@ -73,7 +76,7 @@ The character set is:
 0123456789
 abcdefghijklmnopqrstuvwxyz
  !"#$%&'()*+,-./:\[divide]=[bell symbol]?
-[Underscore][underscored check mark][left arrow]
+[underscore][underscored check mark][left arrow]
 [right arrow][big square][small square]
 ```
 
@@ -232,9 +235,12 @@ information on date format, I believe. For models 150 and 150s.
 | 10   | Character 3 of timezone name     |
 | 11   | Day of week (0=monday, 6=sunday) |
 | 12   | 12h format (1) or 24h format (2) |
-| 13   | Unknown (always 0x02?) Possibly date format. |
+| 13   | Date format                      |
 
-
+Date format:
+* 1: DD-MM-YY
+* 2: YY-MM-DD
+* 3: Accepted, but gives XX-MM-DD where XX is random data
 
 
 ### 0x60 - START2
