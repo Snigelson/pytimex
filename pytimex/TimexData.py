@@ -239,12 +239,12 @@ class TimexData:
 		data += bytes(makeSTART1(version=self.model.protocol))
 
 		if self.sendTime:
-			now = datetime.datetime.utcnow() + datetime.timedelta(0,self.secondsOffset)
+			now = datetime.datetime.utcnow() + datetime.timedelta(0, self.secondsOffset)
 			tz1time = now+datetime.timedelta(hours=self.tz[0].offset)
 			tz2time = now+datetime.timedelta(hours=self.tz[1].offset)
 			if self.model.protocol == 1:
-				data += bytes(makeTZ(2, tz2time, self.tz[1].format))
 				data += bytes(makeTZ(1, tz1time, self.tz[0].format))
+				data += bytes(makeTZ(2, tz2time, self.tz[1].format))
 				data += bytes(makeTZNAME(1, self.tz[0].name))
 				data += bytes(makeTZNAME(2, self.tz[1].name))
 			elif self.model.protocol == 3 or self.model.protocol == 4:
@@ -257,9 +257,12 @@ class TimexData:
 			len(self.phonenumbers)>0 or
 			len(self.anniversaries)>0
 		):
-			data += bytes(makeSTART2(DATA1_num_packets(self.appointments, self.todos, self.phonenumbers, self.anniversaries)))
-			data += bytes(makeDATA1(self.appointments, self.todos, self.phonenumbers, self.anniversaries))
-			data += bytes(makeEND1())
+			if self.model.protocol == 1:
+				data += bytes(makeSTART2(DATA1_num_packets(self.appointments, self.todos, self.phonenumbers, self.anniversaries)))
+				data += bytes(makeDATA1(self.appointments, self.todos, self.phonenumbers, self.anniversaries))
+				data += bytes(makeEND1())
+			else:
+				print("DATA payload not implemented for protocol {}".format(self.model.protocol))
 
 		# It's not necessary to send all alarms at once. Though this
 		# will leave the alarms not explicitly overwritten. So it might
@@ -269,6 +272,8 @@ class TimexData:
 			for a in self.alarms:
 				data += makeALARM(a, i)
 				i+=1
+				if not a.audible and self.model.protocol == 1:
+					data += makeSALARM(i)
 
 		data += bytes(makeEND2())
 
