@@ -15,7 +15,6 @@ program. Much easier than getting it from the CRT!
 
 ## TODO
 
-* Implement protocol for 150 and 150s
 * Test everything more extensively (most tests have been comparing to
   data from the original Timex software) - set up unit tests
 * Work on the protocol documentation
@@ -23,6 +22,9 @@ program. Much easier than getting it from the CRT!
 More specific work:
 
 * Implement phone number type/letter support
+* Support for date format (model 150)
+* Support for multiple numbers on one phone book entry
+* Add "beeps" packet
 
 
 ## "Timex Notebook Adapter"

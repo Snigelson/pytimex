@@ -113,6 +113,8 @@ Packed string max length is 15 characters + terminator. If there is no
 terminator in the 16 characters, the watch will start displaying its own 
 memory.
 
+The Windows help file states that the 150 and 150s supports up to 31
+characters + terminator. I have not yet tested this.
 
 ## Data packets
 
@@ -219,7 +221,7 @@ Example: 0x02 0x0e 0x1c 0x1d - timezone 2 named EST
 Versions: 3, 4
 
 Combination of time packet and time zone name packet. Also includes
-information on date format, I believe. For models 150 and 150s.
+information on date format. For models 150 and 150s.
 
 | Byte | Description                      |
 | ---- | -------------------------------- |
