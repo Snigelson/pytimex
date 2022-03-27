@@ -265,16 +265,20 @@ Date format:
 | 11   | Number of TODOs                    |
 | 12   | Number of phone numbers            |
 | 13   | Number of anniversaries            |
-| 14   | Unknown, see below                 |
+| 14   | Year of the first appointment entry|
 | 15   | Early alarm, in 5 minute intervals |
 
 Sequence ID is incremented for each DATA1 packet sent.
 
 Indices are counted zero inexed from first address byte (2). This means
-the first data is always located at index 0x0e.
+the first data is always located at index 0x0e. Indexes are given in
+MSB first, LSB second.
 
-The unknown byte was documented as 0x60, but I seem to get 0x14 when 
-sending appointments and 0x00 otherwise. Requires some investigating.
+Byte 14 is the year of the first occurring appointment entry. The watch
+probably uses this for computing the day of the week an appointment
+occurs on. The watch most likely implicitly assumes that the
+appointments do not span more than a year into the future, and possibly
+that the entries are uploaded in chronological order.
 
 Byte 15 indicates how long before appointments, in 5 minute intervals, 
 the alarm will sound. Set to 0xFF for no alarm
