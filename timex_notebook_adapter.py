@@ -55,7 +55,7 @@ with serial.Serial(serialPort, 9600) as sp:
 
 			elif inb == b"?":
 				print("Received device ID query ('?')")
-				send("M764\0".encode())
+				send("126\r M764 rev 764002\0".encode())
 
 			elif inb == b"U":
 				print("Received sync byte, entering transmit state")
