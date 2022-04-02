@@ -48,6 +48,8 @@ with serial.Serial(serialPort, 9600) as sp:
 		if len(inb) == 0:
 			break
 
+#		print("CTS: {}\tDSR: {}\tRI: {}\tCD: {}".format(sp.cts,sp.dsr,sp.ri,sp.cd))
+
 		if not transmitState:
 			if inb == b"x":
 				print("Received detection byte ('x')")
@@ -55,7 +57,7 @@ with serial.Serial(serialPort, 9600) as sp:
 
 			elif inb == b"?":
 				print("Received device ID query ('?')")
-				send("M764\0".encode())
+				send("?M764\0".encode())
 
 			elif inb == b"U":
 				print("Received sync byte, entering transmit state")
