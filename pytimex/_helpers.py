@@ -184,6 +184,115 @@ def makeDATA1completeBreakfast(appts, todos, phones, anniversaries, appt_alarm=0
 
 	return makeSTART2(index) + data1packets + makeEND1()
 
+# Takes lists of TimexAppointment, TimexTodo, TimexPhoneNumber
+# and TimexAnniversary objects
+# Returns a tuple of the header and payload.
+# The header is used for a START_EEPROM packet and
+# the payload is used in a sequence of DATA_EEPROM packets.
+def makeDATA_EEPROMheaderpayload(appts, todos, phones, anniversaries, appt_alarm=0xFF):
+	# appointments
+	apptspayload = []
+	for a in appts:
+		apptspayload += list(bytes(a))
+
+	# todos
+	todospayload = []
+	for a in todos:
+		todospayload += list(bytes(a))
+
+	# phone numbers
+	phonespayload = []
+	for a in phones:
+		phonespayload += list(bytes(a))
+
+	# anniversaries
+	anniversariespayload = []
+	for a in anniversaries:
+		anniversariespayload += list(bytes(a))
+
+	address = 0x0236 # address to beginning of the EEPROM
+	header = [ (address&0xFF00)>>8, (address&0x00FF) ] # start address of appointments
+
+	address += len(apptspayload) # address to after appointments on EEPROM
+	header += [ (address&0xFF00)>>8, (address&0x00FF) ] # start address of todos
+
+	address += len(todospayload) # address to after todos on EEPROM
+	header += [ (address&0xFF00)>>8, (address&0x00FF) ] # start address of phone numbers
+
+	address += len(phonespayload) # address to after phone numbers on EEPROM
+	header += [ (address&0xFF00)>>8, (address&0x00FF) ] # start address of anniversaries
+
+	header += [len(appts)]
+	header += [len(todos)]
+	header += [len(phones)]
+	header += [len(anniversaries)]
+	header += [0x16] if len(appts) else [0] # FIXME! this should be the year of the first appointment
+	header += [appt_alarm] # Time, in five minute intervals, to alarm before appointments (0xFF for none)
+
+	payload = apptspayload + todospayload + phonespayload + anniversariespayload
+
+	return header, payload
+
+# Returns the CLEAR_EEPROM packet
+def makeCLEAR_EEPROM():
+	return makepkg([0x93, 0x01])
+
+# Takes lists of TimexAppointment, TimexTodo, TimexPhoneNumber
+# and TimexAnniversary objects
+# Returns the START_EEPROM packet consistent with the data
+def makeSTART_EEPROM(appts, todos, phones, anniversaries, appt_alarm=0xFF):
+	header, payload = makeDATA_EEPROMheaderpayload(appts, todos, phones, anniversaries, appt_alarm=appt_alarm)
+
+	num_packets = ceil(len(payload)/32)
+
+	data = [0x90, 0x01, num_packets] + header
+
+	return makepkg(data)
+
+# Takes lists of TimexAppointment, TimexTodo, TimexPhoneNumber
+# and TimexAnniversary objects
+# Returns the DATA_EEPROM packets consistent with the data
+def makeDATA_EEPROM(appts, todos, phones, anniversaries, appt_alarm=0xFF):
+	_, payload = makeDATA_EEPROMheaderpayload(appts, todos, phones, anniversaries, appt_alarm=appt_alarm)
+
+	data_eeprompackets = []
+	index = 0
+	while (payload):
+		index += 1
+		data_eeprompackets += makepkg([0x91, 0x01, index]+payload[:32])
+		payload = payload[32:]
+
+	return data_eeprompackets
+
+def makeEND_EEPROM():
+	return makepkg([0x92, 0x01])
+
+# Takes lists of TimexAppointment, TimexTodo, TimexPhoneNumber
+# and TimexAnniversary objects
+# Returns the CLEAR_EEPROM, START_EEPROM, DATA_EEPROM and STOP_EEPROM packets consistent with the data
+def makeDATA_EEPROMcompleteBreakfast(appts, todos, phones, anniversaries, appt_alarm=0xFF):
+	header, payload = makeDATA_EEPROMheaderpayload(appts, todos, phones, anniversaries, appt_alarm=appt_alarm)
+
+	num_packets = ceil(len(payload)/32)
+
+	# CLEAR_EEPROM
+	eeprompackets = makepkg([0x03, 0x01])
+
+	# START_EEPROM
+	eeprompackets += makepkg([0x90, 0x01, num_packets] + header)
+
+	# DATA_EEPROM packets
+	index = 0
+	while (payload):
+		index += 1
+		eeprompackets += makepkg([0x91, 0x01, index]+payload[:32])
+		payload = payload[32:]
+
+	# END_EEPROM
+	eeprompackets += makepkg([0x92, 0x01])
+
+	return eeprompackets
+
 # Pass an ID 1 or 2, a datetime object containing current time in this
 # timezone and 12 or 24 for time format
 def makeTZ(tzno, tztime, format):

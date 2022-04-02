@@ -261,6 +261,8 @@ class TimexData:
 				data += bytes(makeSTART2(DATA1_num_packets(self.appointments, self.todos, self.phonenumbers, self.anniversaries)))
 				data += bytes(makeDATA1(self.appointments, self.todos, self.phonenumbers, self.anniversaries))
 				data += bytes(makeEND1())
+			elif self.model.protocol == 3 or self.model.protocol == 4:
+				data += bytes(makeDATA_EEPROMcompleteBreakfast(self.appointments, self.todos, self.phonenumbers, self.anniversaries))
 			else:
 				print("DATA payload not implemented for protocol {}".format(self.model.protocol))
 
