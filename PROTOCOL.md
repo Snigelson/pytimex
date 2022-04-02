@@ -142,30 +142,41 @@ Note that names are made up and not official Timex names.
 List is ordered by in which order the watch expects the packets. I will 
 probably add more info on order later.
 
-| ID   | Name   | Description                         |
-| ---- | ------ | ----------------------------------- |
-| 0x20 | START1 | Data transfer start                 |
-| 0x30 | TIME   | Time information                    |
-| 0x31 | TZNAME | Time zone name                      |
-| 0x32 | TIMETZ | Time information and time zone name |
-| 0x60 | START2 | Marks start of DATA1 packets        |
-| 0x61 | DATA1  | Contains lots of data               |
-| 0x62 | END1   | Marks end of DATA1 packets          |
-| 0x50 | ALARM  | Alarm data                          |
-| 0x70 | SALARM | Sent after silent alarms            |
-| 0x21 | END2   | End of data transfer                |
+| ID   | Name   | Description                          | Watch models           |
+| ---- | ------ | ------------------------------------ | ---------------------- |
+| 0x20 | START1 | Data transfer start                  | 70, 150, 150s, Ironman |
+| 0x30 | TIME   | Time information                     | 70                     |
+| 0x31 | TZNAME | Time zone name                       | 70                     |
+| 0x32 | TIMETZ | Time information and time zone name  | 150, 150s              |
+| 0x60 | START2 | Marks start of DATA1 packets         | 70                     |
+| 0x61 | DATA1  | Contains lots of data                | 70                     |
+| 0x62 | END1   | Marks end of DATA1 packets           | 70                     |
+| 0x50 | ALARM  | Alarm data                           | 70, 150, 150s          |
+| 0x70 | SALARM | Sent after silent alarms (RAM patch) | 70, 150, 150s, Ironman |
+| 0x21 | END2   | End of data transfer                 | 70, 150, 150s, Ironman |
 
-Packets 0x90, 0x91, 0x92, 0x93 and 0x71 are used for data in
-version 3. These are only somewhat documented here.
+Packets 0x90, 0x91, 0x92, 0x93 are used for data transmissions in versions 3 and 4 (150 and 150s)
 
-| ID   | Name   | Description                         |
-| ---- | ------ | ----------------------------------- |
-| 0x90 | START3 | Marks start and type of following packets |
-| 0x91 | DATA   |                                     |
-| 0x92 | END    |                                     |
-| 0x93 | CLEAR  |                                     |
-| 0x71 | BEEPS  |                                     |
+| ID   | Subtype      | Name           | Description                                                |
+| ---- | ------------ | -------------- | ---------------------------------------------------------- |
+| 0x90 | 1 = EEPROM   | START_EEPROM   | Start a new EEPROM transfer sequence, and fill meta data   |
+| 0x91 | 1 = EEPROM   | DATA_EEPROM    | Transmit a packet of EEPROM data                           |
+| 0x92 | 1 = EEPROM   | END_EEPROM     | Finish an EEPROM transfer sequence                         |
+| 0x93 | 1 = EEPROM   | CLEAR_EEPROM   | Clear existing EEPROM metadata information                 |
+| 0x90 | 2 = WRISTAPP | START_WRISTAPP | Start a new Wristapp transfier sequence and fill meta byte |
+| 0x91 | 2 = WRISTAPP | DATA_WRISTAPP  | Transmit a packet of Wristapp data                         |
+| 0x92 | 2 = WRISTAPP | END_WRISTAPP   | Finish a Wristapp transfer sequence                        |
+| 0x93 | 2 = WRISTAPP | CLEAR_WRISTAPP | Clear existing Wristapp from watch                         |
+| 0x90 | 3 = SOUND    | START_SOUND    | Start a new sound transfer sequence from specified offset  |
+| 0x91 | 3 = SOUND    | DATA_SOUND     | Transmit a packet of sound data                            |
+| 0x92 | 3 = SOUND    | END_SOUND      | Finish a sound data transfer sequence                      |
+| 0x93 | 3 = SOUND    | CLEAR_SOUND    | Clear sound area? Not used by original Timex software      |
 
+Packet 0x71 is used for setting the hourly chime and button beeps. Not used by original Timex software.
+
+| ID   | Name  | Description                    |
+| ---- | ----- | ------------------------------ |
+| 0x71 | BEEPS | Configure system sound enabels |
 
 
 ### 0x20 - START1
@@ -178,7 +189,11 @@ Versions: All
 | 2    | Always 0x00 |
 | 3    | Version     |
 
-Version is 0x01 for model 70, 0x03 for model 150 and 0x04 for model 150s.
+Version:
+* 0x01: Model 70
+* 0x03: Model 150
+* 0x04: Model 150s
+* 0x09: Ironman
 
 Example packet: 0x07 0x20 0x00 0x00 0x01 0xc0 0x7f
 
@@ -190,15 +205,19 @@ Versions: 1
 | Byte | Description                      |
 | ---- | -------------------------------- |
 | 1    | Timezone ID (1 or 2)             |
-| 2    | Hour                             |
-| 3    | Minute                           |
-| 4    | Month                            |
-| 5    | Day of month                     |
+| 2    | Hour (0-23)                      |
+| 3    | Minute (0-59)                    |
+| 4    | Month (1-12)                     |
+| 5    | Day of month (1-31)              |
 | 6    | Year (mod 100)                   |
 | 7    | Day of week (0=monday, 6=sunday) |
-| 8    | Seconds                          |
+| 8    | Seconds (0-59)                   |
 | 9    | 12h format (1) or 24h format (2) |
 
+Year:
+* 99: year 1999
+* 00: year 2000
+* 22: year 2022
 
 ### 0x31 - TZNAME
 
@@ -240,12 +259,16 @@ information on date format. For models 150 and 150s.
 | 13   | Date format                      |
 
 Date format:
+* 0: MM-DD-YY
 * 1: DD-MM-YY
 * 2: YY-MM-DD
-* 3: Accepted, but gives XX-MM-DD where XX is random data
-
+* 4: MM.DD.YY
+* 5: DD.MM.YY
+* 6: YY.MM.DD
 
 ### 0x60 - START2
+
+Versions: 1
 
 | Byte | Description                       |
 | ---- | --------------------------------- |
@@ -253,6 +276,8 @@ Date format:
 
 
 ### 0x61 - DATA1
+
+Versions: 1
 
 | Byte | Description                        |
 | ---- | ---------------------------------- |
@@ -265,16 +290,19 @@ Date format:
 | 11   | Number of TODOs                    |
 | 12   | Number of phone numbers            |
 | 13   | Number of anniversaries            |
-| 14   | Unknown, see below                 |
+| 14   | Year of the first appointment entry|
 | 15   | Early alarm, in 5 minute intervals |
 
 Sequence ID is incremented for each DATA1 packet sent.
 
 Indices are counted zero inexed from first address byte (2). This means
-the first data is always located at index 0x0e.
+the first data is always located at index 0x0e. Indexes are given in
+MSB first, LSB second.
 
-The unknown byte was documented as 0x60, but I seem to get 0x14 when 
-sending appointments and 0x00 otherwise. Requires some investigating.
+Byte 14 is the year of the first occurring appointment entry. The watch
+uses this for computing the day of the week an appointment occurs on.
+The watch assumes that the entries are uploaded in chronological order,
+and that the gap between adjacent appointments is less than a year.
 
 Byte 15 indicates how long before appointments, in 5 minute intervals, 
 the alarm will sound. Set to 0xFF for no alarm
@@ -284,11 +312,85 @@ It seems the maximum length of DATA1 packets sent by original software is
 to the first, i.e. no header is added. Header and checksum are not counted
 against start indices.
 
-The following data in the payload are records of the following
-format:
+The following data in the payload are made of records in the EEPROM data record
+formats.
 
-These 4 record types are found in DATA1 packets:
+### 0x62 - END1
 
+Versions: 1
+
+No payload. Marks end of DATA1 packets.
+
+### 0x93 - subtype 1 - CLEAR_EEPROM
+
+Versions: 3, 4
+
+| Byte | Description              |
+| ---- | ------------------------ |
+| 1    | subtype code, 1 = EEPROM |
+
+Clear EEPROM meta data from watch SRAM. Watch forgets how to interpret
+data in EEPROM. However, actual data in EEPROM remains in place.
+
+### 0x90 - subtype 1 - START_EEPROM
+
+Versions: 3, 4
+
+| Byte  | Description                                     |
+| ----- | ----------------------------------------------- |
+| 1     | subtype code, 1 = EEPROM                        |
+| 2     | Number of DATA_EEPROM packets to be transmitted |
+| 3->4  | Address to start of appointment data            |
+| 5->6  | Address to start of todo data                   |
+| 7->8  | Address to start of phone number data           |
+| 9->10 | Address to start of anniversary data            |
+| 11    | Number of appointments                          |
+| 12    | Number of TODOs                                 |
+| 13    | Number of phone number entries                  |
+| 14    | Number of anniversary entries                   |
+| 15    | Year of the first appointment (mod 100)         |
+| 16    | Appointment early alarm, in 5 minute intervals  |
+
+Gets the watch ready to receive a sequence of EEPROM data.
+
+Byte 15 is the year of the first occurring appointment entry. The watch
+uses this for computing the day of the week an appointment occurs on.
+The watch assumes that the entries are uploaded in chronological order,
+and that the gap between adjacent appointments is less than a year.
+
+There appears to be a bug in how the watch calculates days of the week
+for the appointments. Wrapping around from the final appointment back
+to the first will show an incorrect day of the week for all appointments.
+Re-enteering the appointment mode will again calculate the days correctly.
+
+Byte 16 indicates how long before appointments, in 5 minute intervals, 
+the alarm will sound. Set to 0xFF for no alarm
+
+### 0x91 - subtype 1 - DATA_EEPROM
+
+Versions: 3, 4
+
+| Byte   | Description                        |
+| ------ | ---------------------------------- |
+| 1      | subtype code, 1 = EEPROM           |
+| 2      | Sequence ID (starts at 1)          |
+| 3->len | EEPROM payload data                |
+
+The data in the payload consists of records in the EEPROM data record
+formats. The maximum length of the payload is 32 bytes, leading to a
+maximum packet size of 38 bytes.
+
+### 0x92 - subtype 1 - END_EEPROM
+
+Versions: 3, 4
+
+| Byte | Description              |
+| ---- | ------------------------ |
+| 1    | subtype code, 1 = EEPROM |
+
+Ends the EEPROM transmission sequence.
+
+### EEPROM data record formats
 
 #### Appointment record
 
@@ -370,11 +472,6 @@ long.
 | 4->len | Packed string                      |
 
 
-### 0x62 - END1
-
-No payload. Marks end of DATA1 packets.
-
-
 ### 0x50 - ALARM
 
 Versions: 1, 3
@@ -401,15 +498,17 @@ For example, for alarm 3 send 0x70 with payload 0x00 0x64 0x00. I think
 this is sent to patch some firmware error in the watches. To be 
 investigated!
 
-Model 150:
-
+Model 150: It is possible to send only some alarms. Alarms not sent are unchanged.
+The possible firmware error in model 70 appears to be fixed in 150 and
+no 0x70 packets need to be sent.
 
 ### 0x70 - MEM
 
-Versions: 1, 
+Versions: 1, 3, 4, 9
 
 Didn't know what to call this. Sent after silent alarms on version 1,
-not sent on version 3.
+not sent on version 3 by the original Timex software. Seems to be sent
+by the Ironman software.
 
 | Byte | Description                        |
 | ---- | ---------------------------------- |
@@ -437,4 +536,3 @@ TODO: Test this
 ### 0x21 - END2
 
 No payload
-
