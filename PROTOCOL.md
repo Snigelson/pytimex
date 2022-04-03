@@ -321,24 +321,24 @@ Versions: 1
 
 No payload. Marks end of DATA1 packets.
 
-### 0x93 - subtype 1 - CLEAR_EEPROM
+### 0x93 - Subtype 1 - CLEAR_EEPROM
 
 Versions: 3, 4
 
 | Byte | Description              |
 | ---- | ------------------------ |
-| 1    | subtype code, 1 = EEPROM |
+| 1    | Subtype code, 1 = EEPROM |
 
 Clear EEPROM meta data from watch SRAM. Watch forgets how to interpret
-data in EEPROM. However, actual data in EEPROM remains in place.
+data in EEPROM. However, actual data in EEPROM is not touched.
 
-### 0x90 - subtype 1 - START_EEPROM
+### 0x90 - Subtype 1 - START_EEPROM
 
 Versions: 3, 4
 
 | Byte  | Description                                     |
 | ----- | ----------------------------------------------- |
-| 1     | subtype code, 1 = EEPROM                        |
+| 1     | Subtype code, 1 = EEPROM                        |
 | 2     | Number of DATA_EEPROM packets to be transmitted |
 | 3->4  | Address to start of appointment data            |
 | 5->6  | Address to start of todo data                   |
@@ -353,6 +353,12 @@ Versions: 3, 4
 
 Gets the watch ready to receive a sequence of EEPROM data.
 
+The addresses in 3->4, 5->6, 7->8 and 9->10 point to where those particular
+pieces of data begins at on the EEPROM. The addresses are given so that the
+first byte is the MSB of the address while the second byte is the LSB. The
+beginning of the EEPROM is denoted by address 0x0236. The addressing is in
+bytes.
+
 Byte 15 is the year of the first occurring appointment entry. The watch
 uses this for computing the day of the week an appointment occurs on.
 The watch assumes that the entries are uploaded in chronological order,
@@ -361,32 +367,35 @@ and that the gap between adjacent appointments is less than a year.
 There appears to be a bug in how the watch calculates days of the week
 for the appointments. Wrapping around from the final appointment back
 to the first will show an incorrect day of the week for all appointments.
-Re-enteering the appointment mode will again calculate the days correctly.
+Re-entering the appointment mode, or scanning through the dates will again
+calculate the days correctly.
 
 Byte 16 indicates how long before appointments, in 5 minute intervals, 
 the alarm will sound. Set to 0xFF for no alarm
 
-### 0x91 - subtype 1 - DATA_EEPROM
+### 0x91 - Subtype 1 - DATA_EEPROM
 
 Versions: 3, 4
 
 | Byte   | Description                        |
 | ------ | ---------------------------------- |
-| 1      | subtype code, 1 = EEPROM           |
+| 1      | Subtype code, 1 = EEPROM           |
 | 2      | Sequence ID (starts at 1)          |
 | 3->len | EEPROM payload data                |
 
-The data in the payload consists of records in the EEPROM data record
-formats. The maximum length of the payload is 32 bytes, leading to a
+The maximum length of the payload is 32 bytes, leading to a
 maximum packet size of 38 bytes.
 
-### 0x92 - subtype 1 - END_EEPROM
+The data in the payload consists of records in the EEPROM data record
+formats.
+
+### 0x92 - Subtype 1 - END_EEPROM
 
 Versions: 3, 4
 
 | Byte | Description              |
 | ---- | ------------------------ |
-| 1    | subtype code, 1 = EEPROM |
+| 1    | Subtype code, 1 = EEPROM |
 
 Ends the EEPROM transmission sequence.
 
@@ -472,6 +481,62 @@ long.
 | 4->len | Packed string                      |
 
 
+### 0x93 - Subtype 2 - CLEAR_WRISTAPP
+
+Versions: 3, 4
+
+| Byte | Description                |
+| ---- | -------------------------- |
+| 1    | Subtype code, 2 = WRISTAPP |
+
+Clear Wristapp from memory.
+
+### 0x90 - Subtype 2 - START_WRISTAPP
+
+Versions: 3, 4
+
+| Byte  | Description                                       |
+| ----- | ------------------------------------------------- |
+| 1     | Subtype code, 2 = WRISTAPP                        |
+| 2     | Number of DATA_WRISTAPP packets to be transmitted |
+| 3     | Value written to address 0x010e in SRAM           |
+
+Starts a transfer sequence to upload a new Wristapp.
+
+Value put in byte 3 will be written to 0x010e in watch SRAM. The meaning of
+this is unknown. Original Timex software appears to always write a 0x01.
+
+It appears writing any other value to byte 3 will cause the watch to accept the
+wristapp in the transfer, but it will not launch it.
+
+### 0x91 - Subtype 1 - DATA_WRISTAPP
+
+Version 3, 4
+
+| Byte   | Description                        |
+| ------ | ---------------------------------- |
+| 1      | Subtype code, 2 = WRISTAPP         |
+| 2      | Sequence ID (starts at 1)          |
+| 3->len | Wristapp payload data              |
+
+The maximum length of the payload is 32 bytes, leading to a
+maximum packet size of 38 bytes.
+
+The data in the payload consists of data bytes to be written to SRAM
+starting from address 0x0110. There appears to be no protection against
+overflow. Writing past the Wristapp area will first corrupt the sound
+area and then continue onto the upper RAM area.
+
+### 0x92 - Subtype 2 - END_WRISTAPP
+
+Versions: 3, 4
+
+| Byte | Description                |
+| ---- | -------------------------- |
+| 1    | Subtype code, 2 = Wristapp |
+
+Ends the Wristapp transmission sequence.
+
 ### 0x50 - ALARM
 
 Versions: 1, 3
@@ -504,7 +569,7 @@ no 0x70 packets need to be sent.
 
 ### 0x70 - MEM
 
-Versions: 1, 3, 4, 9
+Versions: 1, 3?, 4?, 9?
 
 Didn't know what to call this. Sent after silent alarms on version 1,
 not sent on version 3 by the original Timex software. Seems to be sent
@@ -523,7 +588,7 @@ of bytes may be written.
 
 ### 0x71 - BEEPS
 
-Versions: 1?, 3
+Versions: 1?, 3?, 4?
 
 | Byte | Description                        |
 | ---- | ---------------------------------- |

@@ -276,7 +276,7 @@ def makeDATA_EEPROMcompleteBreakfast(appts, todos, phones, anniversaries, appt_a
 	num_packets = ceil(len(payload)/32)
 
 	# CLEAR_EEPROM
-	eeprompackets = makepkg([0x03, 0x01])
+	eeprompackets = makepkg([0x93, 0x01])
 
 	# START_EEPROM
 	eeprompackets += makepkg([0x90, 0x01, num_packets] + header)
@@ -292,6 +292,31 @@ def makeDATA_EEPROMcompleteBreakfast(appts, todos, phones, anniversaries, appt_a
 	eeprompackets += makepkg([0x92, 0x01])
 
 	return eeprompackets
+
+# Takes a TimexWristapp object.
+# Returns the CLEAR_WRISTAPP, START_WRISTAPP, DATA_WRISTAPP and STOP_WRISTAPP packets consistent with the data
+def makeDATA_WRISTAPPcompleteBreakfast(wristapp):
+	payload = wristapp.databytes
+
+	num_packets = ceil(len(payload)/32)
+
+	# CLEAR_WRISTAPP
+	wristapppackets = makepkg([0x93, 0x02])
+
+	# START_WRISTAPP
+	wristapppackets += makepkg([0x90, 0x02, num_packets, 0x01])
+
+	# DATA_WRISTAPP packets
+	index = 0
+	while (payload):
+		index += 1
+		wristapppackets += makepkg([0x91, 0x02, index]+payload[:32])
+		payload = payload[32:]
+
+	# END_WRISTAPP
+	wristapppackets += makepkg([0x92, 0x02])
+
+	return wristapppackets
 
 # Pass an ID 1 or 2, a datetime object containing current time in this
 # timezone and 12 or 24 for time format

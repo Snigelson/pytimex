@@ -13,7 +13,14 @@ DL50   = WatchModel('DL50', 1) # I think this uses the same protocol as the 70
 DL70   = WatchModel('DL70', 1)
 DL150  = WatchModel('DL150', 3)
 DL150s = WatchModel('DL150s', 4)
+DLIRONMAN = WatchModel('DLIRONMAN', 9)
 
+MMDDYY_DASHES = 0
+DDMMYY_DASHES = 1
+YYMMDD_DASHES = 2
+MMDDYY_DOTS = 4
+DDMMYY_DOTS = 5
+YYMMDD_DOTS = 6
 
 # Month name lookup
 monthNamesAbbr = [
@@ -104,9 +111,10 @@ class TimexAnniversary:
 
 
 class TimexTimezone:
-	def __init__(self, offset=0, format=24, name=""):
+	def __init__(self, offset=0, format=24, name="", dateformat=MMDDYY_DASHES):
 		self.offset = offset
 		self.format = format
+		self.dateformat = dateformat
 		self.name = name
 
 	@property
@@ -119,8 +127,27 @@ class TimexTimezone:
 			raise Exception("Time format must be 12 or 24 hours")
 		self._format = f
 
+	@property
+	def dateformat(self):
+		return self._dateformat
+
+	@dateformat.setter
+	def dateformat(self, f):
+		if not f in [0,1,2,4,5,6]:
+			raise Exception("Date format not valid")
+		self._dateformat = f
+
 	def __str__(self):
-		return "Time zone with offset UTC{:+} named \"{}\", {} hour format".format(offset, name, format)
+		dateformatstring = {
+			0: "MM-DD-YY",
+			1: "DD-MM-YY",
+			2: "YY-MM-DD",
+			4: "MM.DD.YY",
+			5: "DD.MM.YY",
+			6: "YY.MM.D"
+		}.get(self.dateformat, "invalid dateformat")
+
+		return "Time zone with offset UTC{:+} named \"{}\", {} hour format, date format {}".format(self.offset, self.name, self.format, dateformatstring)
 
 
 class TimexAlarm:
@@ -150,6 +177,17 @@ class TimexAlarm:
 		return "Alarm at {:02d}:{:02d} on the {} of {}, label \"{}\", {}".format(
 			self.hour, self.minute, self.day, monthNamesAbbr[self.month], self.label, audible_str)
 
+class TimexWristapp:
+	def __init__(self, filename=None, databytes=None):
+		if databytes != None:
+			self.databytes = databytes
+		elif filename != None:
+			f = open(filename,"rb")
+			self.databytes = list(f.read())
+			f.close()
+		else:
+			raise Exception("You need to specify either a file name or the data")
+
 
 class TimexData:
 	def __init__(self, model=DL70):
@@ -163,20 +201,21 @@ class TimexData:
 			TimexTimezone(0, 24, "utc"),
 			TimexTimezone(-5, 12, "est")
 		]
+		self.wristapp = None
 		# Number of seconds to add to time when blasting, to compensate
 		# for the time between building the packet and the watch
 		# receiving it.
 		self.secondsOffset=8
 		self.model=model
 
-	def setTimezone(self, tzno, offset, format, name):
+	def setTimezone(self, tzno, offset, format, name, dateformat=MMDDYY_DASHES):
 		if tzno not in [1,2]:
 			raise Exception("Time zone number must be 1 or 2!")
 
 		if len(name)>3:
 			raise Exception("Max length for time zone name is 3 characters!")
 
-		self.tz[tzno-1] = TimexTimezone(offset, format, name)
+		self.tz[tzno-1] = TimexTimezone(offset, format, name, dateformat=dateformat)
 
 	def addAppointment(self, appointment):
 		self.appointments.append(appointment)
@@ -233,6 +272,12 @@ class TimexData:
 	def delAlarm(self, alarm):
 		self.alarms = [a for a in self.alarms if a != alarm]
 
+	def setWristapp(self, filename=None, databytes=None):
+		self.wristapp = TimexWristapp(filename=filename, databytes=databytes)
+
+	def delWristapp(self):
+		self.wristapp = None
+
 	def __bytes__(self):
 		data = b''
 
@@ -248,9 +293,10 @@ class TimexData:
 				data += bytes(makeTZNAME(1, self.tz[0].name))
 				data += bytes(makeTZNAME(2, self.tz[1].name))
 			elif self.model.protocol == 3 or self.model.protocol == 4:
-				data += bytes(makeTIMETZ(1, tz1time, self.tz[0].format, self.tz[0].name))
-				data += bytes(makeTIMETZ(2, tz2time, self.tz[1].format, self.tz[1].name))
-
+				data += bytes(makeTIMETZ(1, tz1time, self.tz[0].format, self.tz[0].name, self.tz[0].dateformat))
+				data += bytes(makeTIMETZ(2, tz2time, self.tz[1].format, self.tz[1].name, self.tz[1].dateformat))
+			else:
+				print("Time upload not implemented for protocol {}".format(self.model.protocol))
 		if (
 			len(self.appointments)>0 or
 			len(self.todos)>0 or
@@ -265,6 +311,12 @@ class TimexData:
 				data += bytes(makeDATA_EEPROMcompleteBreakfast(self.appointments, self.todos, self.phonenumbers, self.anniversaries))
 			else:
 				print("DATA payload not implemented for protocol {}".format(self.model.protocol))
+
+		if self.wristapp != None:
+			if self.model.protocol == 3 or self.model.protocol == 4:
+				data += bytes(makeDATA_WRISTAPPcompleteBreakfast(self.wristapp))
+			else:
+				print("Wristapps not supported for protocol {}".format(self.model.protocol))
 
 		# It's not necessary to send all alarms at once. Though this
 		# will leave the alarms not explicitly overwritten. So it might
