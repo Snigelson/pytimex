@@ -1,8 +1,14 @@
 ## pytimex - Timex Data Link watch library
 
-Python libraries for generating and transmitting data to the Timex Data 
-Link series of watches using optical data tramsission. Currently only the 
-protocol for the original Data Link (50 or 70?) is implemented.
+Python libraries for generating and transmitting data to the Timex Data
+Link series of watches using optical data tramsission, an Arduino
+sketch fully able to replace the Notebook Adapter as well as work with
+this library, and software for capturing and decoding packets from the
+original software.
+
+Currently, the protocol for the original Data Link (50 and 70) is
+implemented fully, the 150 and 150s partially, and the Ironman
+Triathlon is being worked on.
 
 There is a guide [written by dfries]
 (https://github.com/dfries/datalink_ironman/blob/github_submodules/datalink/70.txt)
@@ -15,8 +21,8 @@ program. Much easier than getting it from the CRT!
 
 ## TODO
 
-* Test everything more extensively (most tests have been comparing to
-  data from the original Timex software) - set up unit tests
+* Test everything more extensively (most tests so far have been
+  comparing to data from the original Timex software)
 * Work on the protocol documentation
 
 More specific work:
@@ -57,9 +63,11 @@ using an RS232 to UART converter.
 To use it you need an Arduino with ATmega328 (168 would probably work too)
 with 16 MHz clock. Should work with Uno, Nano, Duemilanove and 
 others. Connect a bright LED to pin 12 (maybe with a suitable resistor in 
-series) and that's it. Experiment with distance and intensity to get 
-it just right. Some LEDs are very focused and offers only a narrow beam, 
-so if you have the option, try to find a bright one with a wide beam.
+series) and that's it.
+
+Experiment with distance and intensity to get it just right. Some LEDs
+are very focused and offers only a narrow beam, and might saturate the
+receiver.
 
 What ultimately worked best for me was to use a high-intensity white LED 
 without a resistor and shine it onto a surface. That way, the angle and 

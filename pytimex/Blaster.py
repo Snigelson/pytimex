@@ -37,14 +37,6 @@ class Blaster:
 		if not rdata==data:
 			raise Exception("Validation error! Wrote {} but received {}".format(data, rdata))
 
-# Sends sync and all data
-def blast_all(blaster, data, times55sync=128, timesAAsync=50):
-	blaster.send_sync(times55sync, timesAAsync)
-	for dbyte in data:
-		blaster.blast(dbyte)
-
-
-
 if __name__ == "__main__":
 	portname = sys.argv[1]
 
